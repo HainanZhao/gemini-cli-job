@@ -24,6 +24,19 @@ This will guide you through:
 - Environment configuration (Google Cloud Project, Gemini model)
 - Job creation with pre-built templates
 - Schedule configuration
+- **Sample context file generation** in `~/.gemini-cli-job/context/`
+
+### Customizing Context Files
+
+After setup, you'll find sample context files in `~/.gemini-cli-job/context/`:
+- `about.md` - Information about your organization/team
+- `daily-standup-rules.md` - Daily standup meeting guidelines
+- `products.md` - Your products and services information
+- `release-notes-rules.md` - Release notes formatting guidelines
+- `weekly-update-rules.md` - Weekly update report structure
+- `workflows.md` - Your team's development workflows
+
+**Important**: Update these files with your specific information before running jobs for the best results.
 
 ### Commands
 
