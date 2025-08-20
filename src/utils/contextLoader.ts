@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { log, error } from './logger';
 
 /**
@@ -7,7 +8,8 @@ import { log, error } from './logger';
  * Loads context files for different job types
  */
 export class ContextLoader {
-  private static contextDir = path.join(__dirname, '../../context');
+  private static contextDir = path.join(os.homedir(), '.gemini-cli-job', 'context');
+  private static builtInContextDir = path.join(__dirname, '../../context');
 
   /**
    * Load context by type (releaseNotes, weeklyUpdate, etc.)
@@ -47,6 +49,183 @@ export class ContextLoader {
     }
 
     return combinedContext.trim();
+  }
+
+  /**
+   * Generate sample context files in user's config directory
+   */
+  static generateSampleContextFiles(): void {
+    // Ensure context directory exists
+    if (!fs.existsSync(this.contextDir)) {
+      fs.mkdirSync(this.contextDir, { recursive: true });
+    }
+
+    const sampleContextFiles = {
+      'about.md': `# About Your Organization
+
+Add information about your company, team, or project here.
+This context will be included in relevant job outputs.
+
+## Company/Team Info
+- Name: [Your Company/Team Name]
+- Mission: [Your mission statement]
+- Key products/services: [Brief description]
+
+## Current Focus
+- [Current quarter/sprint goals]
+- [Key initiatives]
+- [Important deadlines]
+
+Update this file with your specific information.`,
+
+      'daily-standup-rules.md': `# Daily Standup Rules
+
+## Meeting Guidelines
+- Keep updates concise (2-3 minutes per person)
+- Focus on: what you did yesterday, what you're doing today, any blockers
+- Mention dependencies and collaboration needs
+- Highlight any urgent issues or deadlines
+
+## Reporting Format
+**Yesterday:**
+- [Key accomplishments]
+
+**Today:**
+- [Planned work]
+
+**Blockers:**
+- [Any impediments]
+
+Update these rules to match your team's standup format.`,
+
+      'products.md': `# Products and Services
+
+## Main Products
+1. **[Product Name]**
+   - Description: [Brief description]
+   - Key features: [Main features]
+   - Target audience: [Who uses it]
+
+2. **[Product Name]**
+   - Description: [Brief description]
+   - Key features: [Main features]
+   - Target audience: [Who uses it]
+
+## Services
+- [Service 1]: [Description]
+- [Service 2]: [Description]
+
+## Technology Stack
+- Frontend: [Technologies]
+- Backend: [Technologies]
+- Database: [Technologies]
+- Infrastructure: [Cloud/hosting]
+
+Update with your actual products and services.`,
+
+      'release-notes-rules.md': `# Release Notes Guidelines
+
+## Format
+### Added
+- New features and capabilities
+
+### Changed
+- Modifications to existing features
+
+### Fixed
+- Bug fixes and issue resolutions
+
+### Removed
+- Deprecated or removed features
+
+## Style Guidelines
+- Use clear, user-friendly language
+- Focus on user impact, not technical details
+- Include relevant links or documentation
+- Mention breaking changes prominently
+
+## Categories to Include
+- User-facing changes
+- API changes
+- Performance improvements
+- Security updates
+
+Customize these rules for your release process.`,
+
+      'weekly-update-rules.md': `# Weekly Update Guidelines
+
+## Report Structure
+### Accomplishments
+- Major milestones reached
+- Key deliverables completed
+- Problems solved
+
+### Current Work
+- Active projects and tasks
+- Progress on ongoing initiatives
+
+### Upcoming
+- Next week's priorities
+- Upcoming deadlines
+- Planned meetings or events
+
+### Challenges
+- Blockers or obstacles
+- Areas needing support
+- Resource constraints
+
+## Audience
+- Team members
+- Management
+- Stakeholders
+
+Adjust the format and content for your team's needs.`,
+
+      'workflows.md': `# Team Workflows
+
+## Development Workflow
+1. **Planning**
+   - Sprint planning meetings
+   - Story pointing and estimation
+   - Task assignment
+
+2. **Development**
+   - Feature branch creation
+   - Code review process
+   - Testing requirements
+
+3. **Deployment**
+   - CI/CD pipeline
+   - Environment promotion
+   - Release procedures
+
+## Communication
+- Daily standups: [Time and format]
+- Sprint reviews: [Frequency and process]
+- Retrospectives: [How often and format]
+
+## Tools
+- Project management: [Tool name]
+- Version control: [Git workflow]
+- Communication: [Slack, Teams, etc.]
+
+Update with your actual workflows and processes.`
+    };
+
+    // Generate each context file
+    Object.entries(sampleContextFiles).forEach(([filename, content]) => {
+      const filePath = path.join(this.contextDir, filename);
+      
+      if (!fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, content);
+        log(`Generated sample context file: ${filename}`);
+      } else {
+        log(`Context file already exists: ${filename}`);
+      }
+    });
+
+    log(`Sample context files available in: ${this.contextDir}`);
+    log('Please update these files with your specific information before running jobs.');
   }
 
   /**

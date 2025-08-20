@@ -26,6 +26,8 @@ async function loadConfiguration(): Promise<Config> {
     const configDir = path.dirname(configPath);
     if (!fs.existsSync(configDir)) {
       fs.mkdirSync(configDir, { recursive: true });
+      // Generate sample context files for new installations
+      ContextLoader.generateSampleContextFiles();
     }
 
     // Load JSON configuration or create default
