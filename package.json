@@ -1,0 +1,42 @@
+{
+  "name": "gemini-cli-job",
+  "version": "1.0.0",
+  "description": "Clean, standalone templated job system for AI-powered automation with Gemini CLI",
+  "main": "dist/index.js",
+  "bin": {
+    "gemini-cli-job": "dist/index.js",
+    "gjob": "dist/index.js",
+    "gemini-job": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc -w",
+    "setup": "gjob setup",
+    "test": "echo \"Tests not implemented yet\" && exit 0",
+    "prepublishOnly": "npm run build",
+    "postinstall": "node -e \"console.log('\\n🚀 Gemini CLI Job installed! Run: gjob setup')\""
+  },
+  "keywords": ["gemini", "ai", "automation", "templated-jobs", "reports", "cli", "jobs", "scheduler", "google-ai"],
+  "author": "",
+  "license": "MIT",
+  "files": [
+    "dist/**/*",
+    "scripts/**/*",
+    "context/**/*",
+    "README.md",
+    ".env.example"
+  ],
+  "preferGlobal": true,
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.8",
+    "@types/node-cron": "^3.0.11",
+    "@types/yargs": "^17.0.32",
+    "typescript": "^5.5.2"
+  }
+}
