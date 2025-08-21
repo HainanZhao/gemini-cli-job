@@ -1,5 +1,5 @@
 import { sendAlert } from '../utils/alertNotifier';
-import { log, error } from '../utils/logger';
+import { log, error, warn } from '../utils/logger';
 import { EnvConfigLoader } from '../utils/envConfigLoader';
 import { GeminiCliCore } from '../utils/geminiCliCore';
 import { ContextLoader } from '../utils/contextLoader';
@@ -130,7 +130,7 @@ export class JobTemplateManager {
       const templatePath = path.join(this.templatesDir, file);
       const template: JobTemplate = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
       this.templates.set(template.templateId, template);
-      log(`Loaded template: ${template.templateId}`);
+      // Quiet loading for CLI mode
     }
   }
 

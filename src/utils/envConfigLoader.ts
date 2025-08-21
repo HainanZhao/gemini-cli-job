@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import { log } from './logger';
+import { log, debug } from './logger';
 
 /**
  * Environment Configuration Loader
@@ -34,7 +34,7 @@ export class EnvConfigLoader {
       throw new Error('GOOGLE_CLOUD_PROJECT environment variable is required');
     }
 
-    log('Environment configuration loaded successfully');
+    debug('Environment configuration loaded successfully');
     return config;
   }
 }
