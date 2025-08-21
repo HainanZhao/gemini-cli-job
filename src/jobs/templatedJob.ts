@@ -495,7 +495,14 @@ export async function runTemplatedJob(jobConfig: TemplatedJobConfig): Promise<vo
     // Step 7: Send success notification
     await sendTemplatedSuccessNotification(jobConfig, template, processedOutput, templateProcessor);
     
+    // Show completion with output preview
     log(`Templated Job ${jobName} completed successfully`);
+    
+    // Show a preview of the generated output
+    const preview = processedOutput.length > 200 ? 
+      processedOutput.substring(0, 200) + '...' : 
+      processedOutput;
+    log(`Generated output preview:\\n${preview}`);
     
   } catch (err: any) {
     error(`Error running Templated Job ${jobName}:`, err);
@@ -569,7 +576,8 @@ async function processTemplatedOutput(
         }
         return JSON.stringify(jsonData, null, 2);
       } catch (err) {
-        log('Failed to parse JSON output, returning raw output');
+        // Not an error - just means Gemini returned text instead of JSON
+        log('Gemini returned text output (not JSON format)');
         return rawOutput;
       }
     

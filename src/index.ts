@@ -141,7 +141,7 @@ async function main() {
         }
       });
     })
-    .command('list-jobs', 'List all configured jobs', () => {}, () => {
+    .command('list', 'List all configured jobs', () => {}, () => {
       console.log('\n📄 Configured Jobs\n' + '='.repeat(18));
       if (config.jobs.length === 0) {
         console.log('📇 No jobs configured. Run: gjob setup');

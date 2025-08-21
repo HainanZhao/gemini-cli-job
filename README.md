@@ -51,7 +51,7 @@ gjob start
 |---------|-------------|
 | `gjob setup` | Interactive setup wizard |
 | `gjob list-templates` | Show available job templates |
-| `gjob list-jobs` | Show configured jobs |
+| `gjob list` | Show configured jobs |
 | `gjob run <jobName>` | Run a specific job immediately |
 | `gjob start` | Start the job scheduler |
 
@@ -145,7 +145,7 @@ $ gjob setup
 gjob run my-project-release-notes
 
 # List all jobs
-gjob list-jobs
+gjob list
 
 # Start scheduler (runs enabled jobs automatically)
 gjob start
@@ -182,7 +182,7 @@ Available Job Templates:
 ## Troubleshooting
 
 ### Job Not Running?
-1. Check if job is enabled: `gjob list-jobs`
+1. Check if job is enabled: `gjob list`
 2. Verify environment: Check `.env` file has correct `GOOGLE_CLOUD_PROJECT`
 3. Test Gemini CLI: Run `gemini --version` to confirm it's installed
 
@@ -259,7 +259,7 @@ npm start list-templates
 
 ### List Configured Jobs  
 ```bash
-npm start list-jobs
+npm start list
 ```
 
 ### Run Specific Job

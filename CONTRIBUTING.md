@@ -50,6 +50,57 @@ npm link    # Create global symlink
 gjob --help # Test global CLI
 ```
 
+### VS Code Debugging
+
+The project includes comprehensive VS Code debugging configurations. Use F5 or the Debug panel to run:
+
+#### Available Debug Configurations
+
+1. **Debug gjob run Alice2-release-notes** - Debug the specific Alice2 release notes job
+2. **Debug gjob run <custom job>** - Debug any job with input prompt
+3. **Debug gjob list-jobs** - Debug job listing functionality
+4. **Debug gjob list-templates** - Debug template listing
+5. **Debug gjob setup** - Debug the interactive setup wizard
+6. **Debug gjob start (scheduler)** - Debug the job scheduler
+7. **Debug gjob help** - Debug help command
+8. **Debug Built CLI (dist/index.js)** - Debug the compiled version
+9. **Debug Specific Template Job** - Debug just the template job execution
+
+#### Quick Start Debugging
+
+1. **Set breakpoints** in your TypeScript source files
+2. **Press F5** or use Debug panel → select configuration → Start Debugging
+3. **Use the integrated terminal** to see output and interact with prompts
+4. **Step through code** with F10 (step over), F11 (step into), Shift+F11 (step out)
+
+#### Custom Job Debugging
+
+Use the "Debug gjob run <custom job>" configuration:
+- VS Code will prompt you for the job name
+- Enter your job name (e.g., "my-custom-job")
+- Debugging will start with that job
+
+#### Environment Variables for Debugging
+
+Debug configurations automatically set:
+- `NODE_ENV=development`
+- `DEBUG=true` (for detailed logging)
+
+#### TypeScript Source Debugging
+
+The configurations use `ts-node` to debug TypeScript directly:
+- No need to compile first for source debugging
+- Breakpoints work in `.ts` files
+- Source maps automatically resolved
+
+#### Tips for Effective Debugging
+
+- **Use Console Panel**: Switch to Debug Console for REPL
+- **Watch Variables**: Add expressions to Watch panel
+- **Call Stack**: Navigate through function calls
+- **Breakpoint Types**: Use conditional breakpoints for specific scenarios
+- **Terminal Integration**: Interactive prompts work in integrated terminal
+
 ## Project Architecture
 
 ### Design Principles
@@ -243,7 +294,7 @@ context/
 3. **Test all commands**
    ```bash
    gjob list-templates
-   gjob list-jobs
+   gjob list
    gjob run test-job
    gjob start
    ```
@@ -266,7 +317,7 @@ context/
 1. **Test with missing config**
    ```bash
    rm ~/.gemini-cli-job/config.json
-   gjob list-jobs  # Should create default config
+   gjob list  # Should create default config
    ```
 
 2. **Test environment loading**
