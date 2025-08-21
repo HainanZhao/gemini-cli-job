@@ -1,8 +1,8 @@
 # Gemini CLI Job
 
-**Clean, standalone templated job system for AI-powered automation with Gemini CLI.**
+**AI-powered automation jobs made simple. Generate reports, release notes, and team updates automatically.**
 
-A simplified, focused system for creating and running automated AI-powered jobs using Google's Gemini CLI. Perfect for generating reports, release notes, team updates, and custom automations.
+A clean CLI tool for creating and running automated AI jobs using Google's Gemini. Perfect for teams who want to automate routine documentation and reporting tasks.
 
 ## Installation
 
@@ -12,66 +12,202 @@ npm install -g gemini-cli-job
 
 ## Quick Start
 
-### Setup
+### 1. Setup (1 minute)
 
-Run the interactive setup wizard to get started quickly:
+Run the interactive setup wizard:
 
 ```bash
 gjob setup
 ```
 
-This will guide you through:
-- Environment configuration (Google Cloud Project, Gemini model)
-- Job creation with pre-built templates
-- Schedule configuration
-- **Sample context file generation** in `~/.gemini-cli-job/context/`
+This will:
+- Configure your Google Cloud Project and Gemini model
+- Create your first job from built-in templates
+- Generate sample context files for customization
+- Set up scheduling (optional)
 
-### Customizing Context Files
+### 2. Customize Context Files
 
-After setup, you'll find sample context files in `~/.gemini-cli-job/context/`:
-- `about.md` - Information about your organization/team
-- `daily-standup-rules.md` - Daily standup meeting guidelines
-- `products.md` - Your products and services information
-- `release-notes-rules.md` - Release notes formatting guidelines
-- `weekly-update-rules.md` - Weekly update report structure
-- `workflows.md` - Your team's development workflows
+Edit the generated context files in `~/.gemini-cli-job/context/`:
 
-**Important**: Update these files with your specific information before running jobs for the best results.
+- `about.md` - Your organization/team information
+- `products.md` - Your products and services
+- `workflows.md` - Your development processes
+- `*-rules.md` - Guidelines for different report types
 
-### Commands
+### 3. Run Your First Job
 
 ```bash
-# Run setup wizard
-gjob setup
+# Test immediately
+gjob run my-project-release-notes
 
-# List available job templates
-gjob list-templates
-
-# List configured jobs
-gjob list-jobs
-
-# Run a specific job immediately
-gjob run <jobName>
-
-# Start the job scheduler
+# Or start the scheduler for automatic runs
 gjob start
 ```
 
-### Available Aliases
+## CLI Commands
 
-You can use any of these commands:
-- `gjob` (short)
-- `gemini-job` (descriptive)
-- `gemini-cli-job` (full name)
+| Command | Description |
+|---------|-------------|
+| `gjob setup` | Interactive setup wizard |
+| `gjob list-templates` | Show available job templates |
+| `gjob list-jobs` | Show configured jobs |
+| `gjob run <jobName>` | Run a specific job immediately |
+| `gjob start` | Start the job scheduler |
+
+**Command Aliases**: You can use `gjob`, `gemini-job`, or `gemini-cli-job` - they all work the same.
 
 ## Features
 
-- 🎯 **Template-based jobs** - Reusable job templates with parameters
-- 🔧 **Easy setup** - Interactive setup wizard gets you started in 1 minute
-- 📅 **Cron scheduling** - Schedule jobs to run automatically
-- 🔔 **Multiple notifications** - Console, Opsgenie, or custom integrations
-- 🎨 **Flexible contexts** - Customizable context files for different job types
-- ⚡ **Fast execution** - Lightweight system focused on templated jobs only
+- 🎯 **4 Built-in Templates** - Release notes, weekly updates, daily standups, custom reports
+- 🔧 **1-Minute Setup** - Interactive wizard gets you started instantly
+- 📅 **Smart Scheduling** - Cron-based automation with manual override
+- � **Context-Aware** - Uses your team info for better AI outputs
+- 🔔 **Notifications** - Console output or OpsGenie integration
+- ⚡ **Lightweight** - Single purpose, minimal dependencies
+
+## Available Job Templates
+
+| Template | Description | Use Cases |
+|----------|-------------|-----------|
+| **Release Notes** | Generate project release summaries | Version releases, changelog automation |
+| **Weekly Update** | Team activity and progress reports | Team meetings, stakeholder updates |
+| **Daily Standup** | Daily team check-ins and blockers | Scrum meetings, remote team coordination |
+| **Custom Report** | Flexible reporting with your prompts | Any custom automation need |
+
+## Prerequisites
+
+- **[Gemini CLI](https://github.com/google/gemini-cli)** installed and configured
+- **Google Cloud Project** with Gemini API access
+- **Node.js 18+**
+
+## Configuration
+
+### Job Configuration
+
+Your jobs are stored in `~/.gemini-cli-job/config.json`. Example:
+
+```json
+{
+  "jobs": [
+    {
+      "jobName": "weekly-team-update",
+      "jobType": "templated",
+      "enabled": true,
+      "schedules": ["0 17 * * 5"],
+      "templateConfig": {
+        "templateId": "weekly-update",
+        "parameters": {
+          "teamName": "Engineering",
+          "users": ["alice@company.com", "bob@company.com"]
+        }
+      }
+    }
+  ]
+}
+```
+
+### Environment Variables
+
+Set these in your `.env` file:
+
+```bash
+GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+GEMINI_MODEL=gemini-1.5-flash
+OPSGENIE_API_KEY=your-key-here  # Optional, for notifications
+```
+
+### Context Files
+
+Customize files in `~/.gemini-cli-job/context/` to improve AI output quality:
+
+- **`about.md`** - Your organization, team, mission
+- **`products.md`** - Products, services, tech stack  
+- **`workflows.md`** - Development processes, tools
+- **`*-rules.md`** - Specific formatting rules for each job type
+
+## Usage Examples
+
+### Setup a Release Notes Job
+
+```bash
+$ gjob setup
+# Choose "Custom Setup"
+# Select "Release Notes" template
+# Enter your project name
+# Set schedule (e.g., "0 9 * * 1" for Monday 9 AM)
+```
+
+### Run Jobs
+
+```bash
+# Run immediately
+gjob run my-project-release-notes
+
+# List all jobs
+gjob list-jobs
+
+# Start scheduler (runs enabled jobs automatically)
+gjob start
+```
+
+### Check Templates
+
+```bash
+$ gjob list-templates
+Available Job Templates:
+- release-notes: Release Notes Generator
+- weekly-update: Weekly Update Report  
+- daily-standup: Daily Standup Summary
+- custom-report: Custom Report Generator
+```
+
+## Common Use Cases
+
+### Automated Release Notes
+- **Schedule**: Monday mornings after deployments
+- **Context**: Include product info, release formatting rules
+- **Output**: Structured release notes for stakeholders
+
+### Team Weekly Updates  
+- **Schedule**: Friday afternoons
+- **Context**: Team member info, current project focus
+- **Output**: Progress summary for management
+
+### Daily Standup Prep
+- **Schedule**: Before daily standups
+- **Context**: Sprint goals, team workflows
+- **Output**: Formatted updates for each team member
+
+## Troubleshooting
+
+### Job Not Running?
+1. Check if job is enabled: `gjob list-jobs`
+2. Verify environment: Check `.env` file has correct `GOOGLE_CLOUD_PROJECT`
+3. Test Gemini CLI: Run `gemini --version` to confirm it's installed
+
+### Poor AI Output Quality?
+1. **Update context files** - Add specific info about your team/products
+2. **Improve job parameters** - Be more specific in template parameters
+3. **Check context loading** - Ensure context files exist and have content
+
+### Scheduling Issues?
+1. **Verify cron format** - Use [crontab.guru](https://crontab.guru) to validate
+2. **Check timezone** - Schedules use system timezone
+3. **Enable jobs** - Make sure `"enabled": true` in config
+
+## Support
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/HainanZhao/gemini-cli-job/issues)
+- **Discussions**: [Ask questions or share templates](https://github.com/HainanZhao/gemini-cli-job/discussions)
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, architecture details, and contribution guidelines.
+
+## License
+
+MIT License - see [LICENSE](./LICENSE) file for details.
 
 ## Prerequisites
 
