@@ -75,7 +75,6 @@ gjob -c /path/to/my-config.json run my-job
 - 🔧 **1-Minute Setup** - Interactive wizard gets you started instantly
 - 📅 **Smart Scheduling** - Cron-based automation with manual override
 - 📝 **Context-Aware** - Uses your team info for better AI outputs
-- 🔔 **Notifications** - Console output or OpsGenie integration
 - ⚡ **Lightweight** - Single purpose, minimal dependencies
 
 ## Prerequisites
@@ -166,7 +165,6 @@ Set these in your `.env` file:
 ```bash
 GOOGLE_CLOUD_PROJECT=your-gcp-project-id
 GEMINI_MODEL=gemini-1.5-flash
-OPSGENIE_API_KEY=your-key-here  # Optional, for notifications
 ```
 
 ### Authentication Setup

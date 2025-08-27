@@ -59,12 +59,11 @@ The project includes comprehensive VS Code debugging configurations. Use F5 or t
 1. **Debug gjob run Alice2-release-notes** - Debug the specific Alice2 release notes job
 2. **Debug gjob run <custom job>** - Debug any job with input prompt
 3. **Debug gjob list-jobs** - Debug job listing functionality
-4. **Debug gjob list-templates** - Debug template listing
-5. **Debug gjob setup** - Debug the interactive setup wizard
-6. **Debug gjob start (scheduler)** - Debug the job scheduler
-7. **Debug gjob help** - Debug help command
-8. **Debug Built CLI (dist/index.js)** - Debug the compiled version
-9. **Debug Specific Template Job** - Debug just the template job execution
+4. **Debug gjob setup** - Debug the interactive setup wizard
+5. **Debug gjob start (scheduler)** - Debug the job scheduler
+6. **Debug gjob help** - Debug help command
+7. **Debug Built CLI (dist/index.js)** - Debug the compiled version
+8. **Debug Specific Template Job** - Debug just the template job execution
 
 #### Quick Start Debugging
 
@@ -75,7 +74,8 @@ The project includes comprehensive VS Code debugging configurations. Use F5 or t
 
 #### Custom Job Debugging
 
-Use the "Debug gjob run <custom job>" configuration:
+Use the "Debug gjob run (custom job)" configuration:
+
 - VS Code will prompt you for the job name
 - Enter your job name (e.g., "my-custom-job")
 - Debugging will start with that job
@@ -83,12 +83,14 @@ Use the "Debug gjob run <custom job>" configuration:
 #### Environment Variables for Debugging
 
 Debug configurations automatically set:
+
 - `NODE_ENV=development`
 - `DEBUG=true` (for detailed logging)
 
 #### TypeScript Source Debugging
 
 The configurations use `ts-node` to debug TypeScript directly:
+
 - No need to compile first for source debugging
 - Breakpoints work in `.ts` files
 - Source maps automatically resolved
@@ -106,6 +108,7 @@ The configurations use `ts-node` to debug TypeScript directly:
 ### Design Principles
 
 This system focuses **only** on templated jobs, making it:
+
 - **Simple** - No complex job type hierarchies
 - **Fast** - Minimal overhead and dependencies  
 - **Maintainable** - Clean, focused codebase
@@ -113,14 +116,14 @@ This system focuses **only** on templated jobs, making it:
 
 ### Project Structure
 
-```
+```text
 src/
 ├── jobs/
 │   └── templatedJob.ts     # Core templated job system
 ├── utils/
 │   ├── logger.ts           # Logging utilities
 │   ├── envConfigLoader.ts  # Environment configuration
-│   ├── contextLoader.ts    # Context file loading & generation
+│   ├── contextLoader.ts    # Context file loading
 │   ├── geminiCliCore.ts    # Gemini CLI integration
 │   └── alertNotifier.ts    # Notification system
 ├── index.ts                # Main CLI application entry
@@ -129,16 +132,19 @@ src/
 scripts/
 └── setup.js                # Interactive setup wizard
 
-context/
-├── about.md                # Sample organization info
-├── products.md             # Sample product info
-├── workflows.md            # Sample workflow info
-└── *-rules.md             # Sample formatting rules
+example/
+├── config.json             # Example configuration
+└── context/                # Example template files
+    ├── about.md
+    ├── products.md
+    ├── workflows.md
+    └── *-rules.md
 ```
 
 ### Key Components
 
 #### 1. TemplatedJob System (`src/jobs/templatedJob.ts`)
+
 - Core job execution engine
 - Template parameter processing
 - Context loading and injection
@@ -146,91 +152,61 @@ context/
 - Result processing and notifications
 
 #### 2. Context Loader (`src/utils/contextLoader.ts`)
+
 - Loads context files by job type
-- Generates sample context files for new users
 - Combines multiple context files
 - Handles missing context gracefully
 
 #### 3. CLI Interface (`src/index.ts`)
+
 - Yargs-based command structure
 - Configuration management
 - Job scheduling with node-cron
 - Global installation support
 
 #### 4. Setup Wizard (`scripts/setup.js`)
+
 - Interactive job configuration
 - Environment setup
-- Context file generation
+- Template file creation (user-guided)
 - User-friendly onboarding
 
 ## Adding New Features
 
 ### Adding a New Job Template
 
-1. **Create template definition**
+**Note**: The current system uses flexible configuration rather than predefined templates. Users create jobs through the setup wizard with custom context files.
+
+1. **Template files are created through setup wizard**
    
-   Templates are JSON files stored in `~/.gemini-cli-job/context/`:
+   Users run `gjob setup` to create template files in `~/.gemini-cli-job/templates/`
+
+2. **Jobs are configured in config.json**
+   
+   Example job configuration:
 
    ```json
    {
-     "contextFiles": "my-new-template",
-     "templateName": "My New Template",
-     "description": "Description of what this template does",
-     "version": "1.0.0",
-     "contextType": "custom",
-     "promptTemplate": "Generate a {{reportType}} for {{projectName}} focusing on {{focusAreas}}",
-     "parameters": {
-       "projectName": {
-         "type": "string",
-         "required": true,
-         "description": "Name of the project"
-       },
-       "reportType": {
-         "type": "string",
-         "required": true,
-         "validation": {
-           "allowedValues": ["summary", "detailed", "brief"]
-         }
-       },
-       "focusAreas": {
-         "type": "string",
-         "required": false,
-         "default": "general progress"
-       }
-     },
-     "outputProcessing": {
-       "format": "markdown",
-       "sections": ["summary", "details", "next-steps"]
+     "jobName": "my-custom-report",
+     "enabled": true,
+     "schedules": ["0 9 * * 1"],
+     "promptConfig": {
+       "contextFiles": [
+         "templates/about.md",
+         "templates/my-custom-rules.md"
+       ],
+       "customPrompt": "Generate a detailed report focusing on {{focusAreas}}"
      }
    }
    ```
 
-2. **Add to built-in templates**
+3. **Context files are user-customizable**
    
-   Update `src/jobs/templatedJob.ts` to include your template in the default templates:
-
-   ```typescript
-   const builtInTemplates = {
-     "my-new-template": {
-       // Your template definition here
-     }
-   };
-   ```
-
-3. **Update context mappings**
-   
-   In `src/utils/contextLoader.ts`, add context file mappings:
-
-   ```typescript
-   const contextMapping: Record<string, string[]> = {
-     // Existing mappings...
-     myNewTemplate: ['about.md', 'my-custom-rules.md', 'workflows.md']
-   };
-   ```
-
-4. **Add setup wizard support**
-   
-   Update `scripts/setup.js` to include your template in the setup options.
+   Template files in `~/.gemini-cli-job/templates/` can be customized:
+   - `about.md` - Organization and team information
+   - `products.md` - Product and service details
+   - `workflows.md` - Development processes
+   - `*-rules.md` - Job-specific formatting guidelines
 
 ### Adding New CLI Commands
 
@@ -263,7 +239,7 @@ context/
    Add new notification type:
 
    ```typescript
-   export type NotificationType = 'console' | 'opsgenie' | 'slack' | 'my-new-type';
+   export type NotificationType = 'console' | 'my-new-type';
    
    // Add implementation in sendAlert method
    ```
@@ -277,12 +253,14 @@ context/
 ### Manual Testing
 
 1. **Build and link locally**
+
    ```bash
    npm run build
    npm link
    ```
 
 2. **Test setup in clean environment**
+
    ```bash
    cd /tmp
    mkdir test-install
@@ -292,35 +270,42 @@ context/
    ```
 
 3. **Test all commands**
+
    ```bash
-   gjob list-templates
    gjob list
    gjob run test-job
    gjob start
    ```
 
-### Testing Context Generation
+### Testing Template Setup
 
-1. **Remove existing context**
+1. **Test setup wizard**
+
    ```bash
-   rm -rf ~/.gemini-cli-job/context
+   rm -rf ~/.gemini-cli-job
+   gjob setup  # Should guide through job and template creation
    ```
 
-2. **Test context file creation**
+2. **Verify created files**
+
    ```bash
-   gjob list-templates  # Should create context files
-   ls ~/.gemini-cli-job/context/
+   ls ~/.gemini-cli-job/
+   # Should show: config.json, templates/
+   ls ~/.gemini-cli-job/templates/
+   # Should show template files created during setup
    ```
 
 ### Testing Configuration
 
 1. **Test with missing config**
+
    ```bash
    rm ~/.gemini-cli-job/config.json
    gjob list  # Should create default config
    ```
 
 2. **Test environment loading**
+
    ```bash
    # Test with missing .env
    # Test with invalid GOOGLE_CLOUD_PROJECT
@@ -420,6 +405,7 @@ npm publish
 ### Why Only Templated Jobs?
 
 This project deliberately focuses on a single job type to:
+
 - Reduce complexity for users and maintainers
 - Provide a more polished experience
 - Make the codebase easier to understand and contribute to
@@ -428,6 +414,7 @@ This project deliberately focuses on a single job type to:
 ### Why CLI-First?
 
 The CLI approach provides:
+
 - Easy installation with `npm install -g`
 - Familiar interface for developers
 - Simple automation and scripting
@@ -436,6 +423,7 @@ The CLI approach provides:
 ### Why Context Files?
 
 Context files enable:
+
 - Better AI output quality through relevant context
 - Reusable context across multiple jobs
 - User customization without code changes
