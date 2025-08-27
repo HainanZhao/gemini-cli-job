@@ -187,6 +187,25 @@ Available configuration options:
 
 - `googleCloudProject` - Google Cloud Project ID (overrides `GOOGLE_CLOUD_PROJECT` environment variable)
 - `geminiOptions.model` - Gemini model to use (overrides `GEMINI_MODEL` environment variable)
+- `geminiOptions.timeoutMs` - Timeout in milliseconds for job execution (default: 300000 = 5 minutes)
+
+**Example with custom timeout:**
+
+```json
+{
+  "jobName": "long-running-analysis",
+  "enabled": true,
+  "schedules": ["0 2 * * 1"],
+  "promptConfig": {
+    "contextFiles": ["context/analysis-rules.md"],
+    "customPrompt": "Perform comprehensive data analysis"
+  },
+  "geminiOptions": {
+    "model": "gemini-2.5-flash",
+    "timeoutMs": 900000
+  }
+}
+```
 
 **Note:** Advanced options like temperature and maxTokens are not currently supported by Gemini CLI
 

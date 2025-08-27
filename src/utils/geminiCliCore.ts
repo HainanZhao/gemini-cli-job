@@ -10,6 +10,7 @@ import { log, error, debug } from './logger';
  */
 export interface GeminiOptions {
   model?: string;
+  timeoutMs?: number; // Timeout in milliseconds, defaults to 300000 (5 minutes)
 }
 
 export class GeminiCliCore {
@@ -18,10 +19,12 @@ export class GeminiCliCore {
    */
   async executeGemini(prompt: string, options: GeminiOptions = {}, googleCloudProject?: string): Promise<{ stdout: string; stderr: string }> {
     const model = options.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    const timeoutMs = options.timeoutMs || 300_000; // Default to 5 minutes
     
     return new Promise((resolve, reject) => {
       log(`Executing job with Gemini model: ${model}`);
       debug(`Prompt length: ${prompt.length} characters`);
+      debug(`Timeout set to: ${timeoutMs}ms (${timeoutMs / 1000}s)`);
       debug(`Google Cloud Project: ${googleCloudProject || process.env.GOOGLE_CLOUD_PROJECT}`);
       
       // Debug: Print the full context template content
@@ -35,10 +38,10 @@ export class GeminiCliCore {
       
       // Add timeout to prevent hanging
       const timeout = setTimeout(() => {
-        debug('Gemini CLI timeout after 300 seconds, killing process');
+        debug(`Gemini CLI timeout after ${timeoutMs}ms, killing process`);
         geminiProcess.kill('SIGTERM');
-        reject(new Error('Gemini CLI execution timed out after 300 seconds'));
-      }, 300_000);
+        reject(new Error(`Gemini CLI execution timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
       
       const geminiProcess = spawn('gemini', args, {
         stdio: ['pipe', 'pipe', 'pipe'],
@@ -68,6 +71,15 @@ export class GeminiCliCore {
       geminiProcess.on('close', (code) => {
         clearTimeout(timeout);
         debug(`Gemini CLI process closed with code: ${code}`);
+        
+        // Debug: Log the raw response
+        debug('=== RAW GEMINI CLI RESPONSE ===');
+        debug(`STDOUT (${stdout.length} chars):`);
+        debug(stdout);
+        debug(`STDERR (${stderr.length} chars):`);
+        debug(stderr);
+        debug('=== END RAW RESPONSE ===');
+        
         if (code === 0) {
           log('✅ Gemini CLI execution completed successfully');
           resolve({ stdout: stdout.trim(), stderr: stderr.trim() });

@@ -32,6 +32,7 @@ export interface SimpleJobConfig {
     model?: string;
     temperature?: number;
     maxTokens?: number;
+    timeoutMs?: number; // Timeout in milliseconds, defaults to 300000 (5 minutes)
   };
 }
 
@@ -167,7 +168,7 @@ export async function runSimpleJob(jobConfig: SimpleJobConfig, configDir?: strin
     
     // Append custom prompt if provided
     if (promptConfig.customPrompt) {
-      prompt += promptConfig.customPrompt;
+      prompt += `\n\n**IMPORTANT CUSTOM INSTRUCTIONS - PLEASE READ CAREFULLY:**\n${promptConfig.customPrompt}\n**END CUSTOM INSTRUCTIONS**`;
     }
     
     if (!prompt.trim()) {

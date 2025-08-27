@@ -30,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `gjob memory show <jobName>` - View memory content for a specific job  
   - `gjob memory clear <jobName>` - Clear stored memory for a job
 
+- **Configurable Job Timeout** - Added `timeoutMs` option to geminiOptions for custom job timeouts
+  - Global and per-job timeout configuration support
+  - Default timeout remains 300000ms (5 minutes) if not specified
+  - Helpful for long-running analysis or complex generation tasks
+
 ### Changed
 
 - **Memory Enabled by Default** - All jobs now automatically have persistent memory enabled
