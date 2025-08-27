@@ -1,0 +1,166 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.0] - 2025-08-27
+
+### Added
+
+#### Core Features
+
+- **Templated Job System** - Clean, standalone job execution system focused on AI-powered automation
+- **Gemini CLI Integration** - Full integration with Google's Gemini CLI for AI content generation
+- **Interactive Setup Wizard** - One-minute setup process via `gjob setup` command
+- **Multi-Template Support** - Use multiple context files for richer AI prompts
+
+#### Built-in Job Templates
+
+- **Release Notes Generator** - Automated project release summaries and changelogs
+- **Weekly Update Reports** - Team activity and progress reporting
+- **Daily Standup Summaries** - Daily team check-ins and blocker identification
+- **Custom Report Generator** - Flexible reporting with custom prompts
+
+#### CLI Interface
+
+- **Multiple Command Aliases** - `gjob`, `gemini-job`, and `gemini-cli-job` all work
+- **Flexible Configuration** - Support for custom config file paths via `--config` flag
+- **Job Management Commands**:
+  - `gjob setup` - Interactive setup wizard
+  - `gjob list` - Show configured jobs
+  - `gjob run <jobName>` - Execute specific jobs
+  - `gjob start` - Start the job scheduler
+  - `gjob templates` - Show template directory information
+
+#### Configuration System
+
+- **Hierarchical Configuration** - Global settings with per-job overrides
+- **Google Cloud Project Integration** - Automatic project ID detection and configuration
+- **Gemini Model Selection** - Support for different Gemini models per job
+- **Environment Variable Support** - Fallback to environment variables when config values not set
+- **Priority Handling** - Config.json values take precedence over environment variables
+
+#### Context and Templating
+
+- **Context File System** - Customizable template files for better AI output:
+  - `about.md` - Organization and team information
+  - `products.md` - Product and service details
+  - `workflows.md` - Development processes and tools
+  - `*-rules.md` - Job-specific formatting guidelines
+- **Multi-Context Support** - Load multiple context files per job for comprehensive prompts
+- **Template Parameter System** - Structured parameter passing to AI prompts
+
+#### Scheduling and Automation
+
+- **Cron-based Scheduling** - Flexible job scheduling using cron expressions
+- **Manual Job Execution** - Run jobs immediately for testing or ad-hoc needs
+- **Job Enable/Disable** - Granular control over which jobs run automatically
+
+#### Notifications and Output
+
+- **Console Notifications** - Clean, formatted output for job results
+- **OpsGenie Integration** - Optional alert notifications for job completion/failure
+- **Debug Mode** - Detailed logging when `DEBUG=true` environment variable is set
+- **Clean Production Output** - Minimal noise in normal operation
+
+#### Developer Experience
+
+- **TypeScript Support** - Full TypeScript implementation with strong typing
+- **Development Mode** - Watch mode for rapid development (`npm run dev`)
+- **Global Package Installation** - Install once, use anywhere
+- **Comprehensive Documentation** - Detailed README with examples and troubleshooting
+
+#### Error Handling and Reliability
+
+- **Timeout Protection** - 300-second timeout for Gemini CLI operations
+- **Process Management** - Proper cleanup of child processes
+- **Stdin Prompt Handling** - Robust handling of multi-line prompts via stdin
+- **Error Recovery** - Graceful error handling with informative messages
+
+### Technical Implementation
+
+#### Architecture
+
+- **Clean Separation of Concerns** - Modular design with focused utilities
+- **Single Job Type Focus** - Simplified architecture concentrating on templated jobs
+- **Minimal Dependencies** - Lightweight implementation with essential packages only
+- **Process Spawning** - Efficient child process management for CLI integration
+
+#### Dependencies
+
+- **Core Runtime**: Node.js 18+, dotenv, node-cron, yargs
+- **Development**: TypeScript, tsx, @types packages
+- **External**: Gemini CLI tool for AI integration
+
+#### File Structure
+
+```text
+src/
+├── jobs/templatedJob.ts     # Core job execution logic
+├── utils/
+│   ├── geminiCliCore.ts     # Gemini CLI integration
+│   ├── logger.ts            # Logging with debug support
+│   ├── envConfigLoader.ts   # Configuration management
+│   ├── templateLoader.ts    # Context file handling
+│   └── alertNotifier.ts     # Notification system
+└── index.ts                 # Main CLI application
+```
+
+### Changed
+
+- N/A (Initial release)
+
+### Deprecated
+
+- N/A (Initial release)
+
+### Removed
+
+- N/A (Initial release)
+
+### Fixed
+
+- N/A (Initial release)
+
+### Security
+
+- **Environment Variable Handling** - Secure loading of sensitive configuration via dotenv
+- **Process Isolation** - Proper child process management for external CLI execution
+
+---
+
+## Release Notes
+
+This initial release establishes Gemini CLI Job as a production-ready solution for AI-powered automation. The focus on templated jobs provides a clean, maintainable foundation that teams can adopt quickly and customize for their specific needs.
+
+### Migration Notes
+
+- This is the initial release - no migration required
+- For setup, run `gjob setup` to configure your first automation jobs
+
+### Known Limitations
+
+- Temperature and maxTokens configuration options are defined but not yet supported by Gemini CLI
+- Test framework not yet implemented (planned for future release)
+
+### Upcoming Features
+
+- Unit test framework and coverage
+- Additional built-in job templates
+- Web UI for job configuration and monitoring
+- Enhanced notification providers (Slack, Teams, etc.)
+- Job history and result storage
+
+---
+
+## Support and Contributing
+
+- **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/HainanZhao/gemini-cli-job/issues)
+- **Discussions**: Ask questions or share templates on [GitHub Discussions](https://github.com/HainanZhao/gemini-cli-job/discussions)
+- **Contributing**: See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines
+
+## License
+
+MIT License - see [LICENSE](./LICENSE) file for details.
