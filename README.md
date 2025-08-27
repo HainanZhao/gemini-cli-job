@@ -39,6 +39,7 @@ Edit the generated template files in `~/.gemini-cli-job/context/`:
 
 ```bash
 # Test immediately
+gjob list
 gjob run my-project-release-notes
 
 # Or start the scheduler for automatic runs
@@ -50,15 +51,16 @@ gjob start
 | Command | Description |
 |---------|-------------|
 | `gjob setup` | Interactive setup wizard |
-| `gjob templates` | Show template directory information |
 | `gjob list` | Show configured jobs |
 | `gjob run <jobName>` | Run a specific job immediately |
 | `gjob start` | Start the job scheduler |
 
 **Global Options:**
+
 - `--config`, `-c` - Path to config.json file (default: ~/.gemini-cli-job/config.json)
 
 **Examples:**
+
 ```bash
 # Use custom config file
 gjob --config /path/to/my-config.json list
@@ -69,21 +71,12 @@ gjob -c /path/to/my-config.json run my-job
 
 ## Features
 
-- 🎯 **4 Built-in Templates** - Release notes, weekly updates, daily standups, custom reports
+- 🎯 **Template-Based Jobs** - Flexible job system using customizable templates
 - 🔧 **1-Minute Setup** - Interactive wizard gets you started instantly
 - 📅 **Smart Scheduling** - Cron-based automation with manual override
-- � **Context-Aware** - Uses your team info for better AI outputs
+- 📝 **Context-Aware** - Uses your team info for better AI outputs
 - 🔔 **Notifications** - Console output or OpsGenie integration
 - ⚡ **Lightweight** - Single purpose, minimal dependencies
-
-## Available Job Templates
-
-| Template | Description | Use Cases |
-|----------|-------------|-----------|
-| **Release Notes** | Generate project release summaries | Version releases, changelog automation |
-| **Weekly Update** | Team activity and progress reports | Team meetings, stakeholder updates |
-| **Daily Standup** | Daily team check-ins and blockers | Scrum meetings, remote team coordination |
-| **Custom Report** | Flexible reporting with your prompts | Any custom automation need |
 
 ## Prerequisites
 
@@ -117,34 +110,6 @@ Your jobs are stored in `~/.gemini-cli-job/config.json`. Example:
       },
       "geminiOptions": {
         "model": "gemini-2.5-flash"
-      }
-    }
-  ]
-}
-```
-
-#### Multi-Template Support
-
-You can use multiple template files for richer context:
-
-```json
-{
-  "googleCloudProject": "your-gcp-project-id",
-  "geminiOptions": {
-    "model": "gemini-2.0-flash"
-  },
-  "jobs": [
-    {
-      "jobName": "comprehensive-report",
-      "enabled": true,
-      "schedules": ["0 9 * * 1"],
-      "promptConfig": {
-        "contextFiles": [
-          "context/about.md",
-          "context/release-notes-rules.md",
-          "context/products.md"
-        ],
-        "customPrompt": "Generate comprehensive weekly report"
       }
     }
   ]
@@ -228,43 +193,6 @@ Customize files in `~/.gemini-cli-job/context/` to improve AI output quality:
 - **`workflows.md`** - Development processes, tools
 - **`*-rules.md`** - Specific formatting rules for each job type
 
-## Usage Examples
-
-### Setup a Release Notes Job
-
-```bash
-$ gjob setup
-# Choose "Custom Setup"
-# Select "Release Notes" template
-# Enter your project name
-# Set schedule (e.g., "0 9 * * 1" for Monday 9 AM)
-```
-
-### Run Jobs
-
-```bash
-# Run immediately
-gjob run my-project-release-notes
-
-# List all jobs
-gjob list
-
-# Start scheduler (runs enabled jobs automatically)
-gjob start
-```
-
-### Check Templates
-
-```bash
-$ gjob templates
-📁 Template Directory Information
-===================================
-📂 Templates location: ~/.gemini-cli-job/templates
-📄 Config file: ~/.gemini-cli-job/config.json
-
-💡 Usage: Configure contextFiles in your config.json to specify which templates to use
-Example: "contextFiles": ["templates/about.md", "templates/release-notes-rules.md"]
-```
 
 ## Common Use Cases
 
@@ -296,9 +224,9 @@ Example: "contextFiles": ["templates/about.md", "templates/release-notes-rules.m
 
 ### Poor AI Output Quality?
 
-1. **Update template files** - Add specific info about your team/products
-2. **Improve job parameters** - Be more specific in template parameters
-3. **Check context loading** - Ensure template files exist and have content
+1. **Update context files** - Add specific info about your team/products
+2. **Improve job parameters** - Be more specific in context parameters
+3. **Check context loading** - Ensure context files exist and have content
 
 ### Scheduling Issues?
 
@@ -309,7 +237,7 @@ Example: "contextFiles": ["templates/about.md", "templates/release-notes-rules.m
 ## Support
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/HainanZhao/gemini-cli-job/issues)
-- **Discussions**: [Ask questions or share templates](https://github.com/HainanZhao/gemini-cli-job/discussions)
+- **Discussions**: [Ask questions or share context templates](https://github.com/HainanZhao/gemini-cli-job/discussions)
 
 ## Contributing
 
