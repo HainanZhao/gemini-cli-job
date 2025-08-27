@@ -44,7 +44,6 @@ async function loadConfigurationQuietly(): Promise<Config> {
     // Ensure config directory exists
     if (!fs.existsSync(configDirectory)) {
       fs.mkdirSync(configDirectory, { recursive: true });
-      ContextLoader.generateSampleTemplateFiles(configDirectory);
     }
 
     // Load JSON configuration or create default
@@ -104,8 +103,6 @@ async function main() {
       });
     })
     .command('list', 'List all configured jobs', () => {}, async () => {
-      // Initialize for this command
-      await ContextLoader.initializeDefaultTemplates();
       const config = await loadConfigurationQuietly();
       
       console.log('\n📄 Configured Jobs\n' + '='.repeat(18));
@@ -121,8 +118,6 @@ async function main() {
       console.log();
     })
     .command('templates', 'Show template directory info', () => {}, async () => {
-      // Initialize for this command
-      await ContextLoader.initializeDefaultTemplates();
       const templatesDir = path.join(configDirectory, 'templates');
       
       console.log('\n📁 Template Directory Information');
@@ -140,8 +135,6 @@ async function main() {
         });
       }, 
       async (argv) => {
-        // Initialize for this command
-        await ContextLoader.initializeDefaultTemplates();
         const config = await loadConfigurationQuietly();
         
         const jobToRun = config.jobs.find((job: SimpleJobConfig) => 
@@ -164,8 +157,6 @@ async function main() {
       }
     )
     .command('start', 'Start the job scheduler', () => {}, async () => {
-        // Initialize for this command
-        await ContextLoader.initializeDefaultTemplates();
         const config = await loadConfigurationQuietly();
         
         console.log('\n🚀 Starting Gemini CLI Job Scheduler\n' + '='.repeat(36));

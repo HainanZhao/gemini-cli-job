@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- markdownlint-disable MD024 -->
+
+## [1.0.1] - 2025-08-27
+
+### Removed
+
+- **Automatic Template Generation** - Removed `generateSampleTemplateFiles()` and `initializeDefaultContexts()` functions that automatically created template files
+- **Outdated Documentation** - Removed "Available Job Templates" section from README.md that no longer reflected current functionality
+- **Unused CLI Command** - Removed references to `gjob templates` command from documentation
+
+### Changed
+
+- **Template Creation** - Template files are now only created through the explicit `gjob setup` wizard, not automatically when accessing config directories
+- **ContextLoader Responsibility** - Simplified ContextLoader class to only load existing context files, not generate them
+- **Documentation** - Updated README.md to accurately reflect current CLI commands and configuration options
+- **User Experience** - Users must now explicitly run setup wizard to create templates, preventing surprise file generation
+
+### Fixed
+
+- **Documentation Accuracy** - Removed outdated and confusing information about built-in templates and non-existent commands
+- **Code Clarity** - Eliminated duplicate template definitions and automatic file generation logic
+
 ## [1.0.0] - 2025-08-27
 
 ### Added

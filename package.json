@@ -1,6 +1,6 @@
 {
   "name": "gemini-cli-job",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Clean, standalone templated job system for AI-powered automation with Gemini CLI",
   "main": "dist/index.js",
   "bin": {
