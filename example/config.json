@@ -14,7 +14,7 @@
           "context/products.md",
           "context/daily-standup-rules.md"
         ],
-        "customPrompt": "Generate comprehensive report for me"
+        "customPrompt": "Generate comprehensive report for me hainan.zhao hainan.zhao@grasshopperasia.com by looking at JIRA ticket update within the last 1 day"
       },
       "geminiOptions": {
         "model": "gemini-2.5-flash"
