@@ -1,5 +1,5 @@
 import { spawn } from 'child_process';
-import { log, error } from './logger';
+import { log, error, debug } from './logger';
 
 /**
  * Gemini CLI Core Integration
@@ -20,17 +20,17 @@ export class GeminiCliCore {
     const model = options.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     
     return new Promise((resolve, reject) => {
-      log(`Executing Gemini CLI with model: ${model}`);
-      log(`Prompt length: ${prompt.length} characters`);
-      log(`Google Cloud Project: ${googleCloudProject || process.env.GOOGLE_CLOUD_PROJECT}`);
+      log(`Executing job with Gemini model: ${model}`);
+      debug(`Prompt length: ${prompt.length} characters`);
+      debug(`Google Cloud Project: ${googleCloudProject || process.env.GOOGLE_CLOUD_PROJECT}`);
       
       // Use -m for model only, pass prompt via stdin for better handling of special characters
       const args = ['-m', model];
-      log(`Command: gemini ${args.join(' ')} (prompt via stdin)`);
+      debug(`Command: gemini ${args.join(' ')} (prompt via stdin)`);
       
       // Add timeout to prevent hanging
       const timeout = setTimeout(() => {
-        log('Gemini CLI timeout after 60 seconds, killing process');
+        debug('Gemini CLI timeout after 300 seconds, killing process');
         geminiProcess.kill('SIGTERM');
         reject(new Error('Gemini CLI execution timed out after 300 seconds'));
       }, 300_000);
@@ -50,21 +50,21 @@ export class GeminiCliCore {
       
       geminiProcess.stdout?.on('data', (data) => {
         const chunk = data.toString();
-        log(`[STDOUT] ${chunk.substring(0, 200)}${chunk.length > 200 ? '...' : ''}`);
+        debug(`[STDOUT] ${chunk.substring(0, 200)}${chunk.length > 200 ? '...' : ''}`);
         stdout += chunk;
       });
       
       geminiProcess.stderr?.on('data', (data) => {
         const chunk = data.toString();
-        log(`[STDERR] ${chunk.substring(0, 200)}${chunk.length > 200 ? '...' : ''}`);
+        debug(`[STDERR] ${chunk.substring(0, 200)}${chunk.length > 200 ? '...' : ''}`);
         stderr += chunk;
       });
       
       geminiProcess.on('close', (code) => {
         clearTimeout(timeout);
-        log(`Gemini CLI process closed with code: ${code}`);
+        debug(`Gemini CLI process closed with code: ${code}`);
         if (code === 0) {
-          log('Gemini CLI execution completed successfully');
+          log('✅ Gemini CLI execution completed successfully');
           resolve({ stdout: stdout.trim(), stderr: stderr.trim() });
         } else {
           const errorMessage = `Gemini CLI failed with exit code ${code}: ${stderr}`;
@@ -80,7 +80,7 @@ export class GeminiCliCore {
         reject(new Error(errorMessage));
       });
       
-      log('Gemini CLI process started, waiting for response...');
+      debug('Gemini CLI process started, waiting for response...');
       
       // Send the prompt to stdin
       geminiProcess.stdin?.write(prompt);
