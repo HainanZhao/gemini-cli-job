@@ -46,26 +46,58 @@ gjob run my-project-release-notes
 gjob start
 ```
 
-## CLI Commands
+## Commands
 
-| Command | Description |
-|---------|-------------|
-| `gjob setup` | Interactive setup wizard |
-| `gjob list` | Show configured jobs |
-| `gjob run <jobName>` | Run a specific job immediately |
-| `gjob start` | Start the job scheduler |
+### Basic Usage
 
-**Global Options:**
+- **`gjob`** - Start interactive scheduler
+- **`gjob -j <job-name>`** - Run specific job once  
+- **`gjob list`** - List all configured jobs
+- **`gjob --help`** - Show all available commands
 
-- `--config`, `-c` - Path to config.json file (default: ~/.gemini-cli-job/config.json)
+### Memory Management
 
-**Examples:**
+Jobs automatically maintain persistent memory across runs to track state like last update times, versions, etc.
 
-```bash
-# Use custom config file
-gjob --config /path/to/my-config.json list
-gjob -c /path/to/my-config.json run my-job
+- **`gjob memory list`** - List all jobs with stored memory
+- **`gjob memory show <job-name>`** - View memory content for a specific job
+- **`gjob memory clear <job-name>`** - Clear stored memory for a job
+
+Memory is automatically enabled for all jobs. When jobs run, they can access and update key-value pairs that persist between runs. This is useful for tracking timestamps, version numbers, or any other state that needs to be remembered.
+
+Example job configuration:
+
+```json
+{
+  "jobName": "version-tracker",
+  "enabled": true,
+  "schedules": ["0 9 * * *"],
+  "promptConfig": {
+    "contextFiles": ["context/about.md"],
+    "customPrompt": "Track version updates and remember the last checked version"
+  }
+}
 ```
+
+The Gemini AI can update memory by including a `jobMemory` object in its JSON response:
+
+```json
+{
+  "jobResult": "Generated weekly report with 5 new features documented.",
+  "jobMemory": {
+    "lastUpdatedTime": "2025-08-27T15:30:00Z",
+    "featuresProcessed": 5,
+    "nextDeadline": "2025-09-01"
+  }
+}
+```
+
+**Robust Response Handling**: The system can handle various output formats:
+
+- Pure JSON responses  
+- JSON mixed with other logs/text
+- Plain text responses (automatic fallback)
+- Invalid or malformed responses (graceful error handling)
 
 **Command Aliases**: You can use `gjob`, `gemini-job`, or `gemini-cli-job` - they all work the same.
 

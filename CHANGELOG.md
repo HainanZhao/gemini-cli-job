@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## [1.1.0] - 2025-08-27
+
+### Added
+
+- **Job Memory System** - Persistent key-value storage for jobs to track state across executions
+  - `JobMemory` utility class for loading and saving job-specific memory
+  - Memory files stored in `~/.gemini-cli-job/memory/<jobName>.json`
+  - Memory content automatically injected into job prompts
+  - Support for tracking timestamps, version numbers, counters, and custom state
+
+- **Structured JSON Response System** - Jobs now return structured responses for better automation
+  - Gemini AI returns JSON with `jobResult` (main output) and `jobMemory` (state updates)
+  - **Robust JSON Parsing** - Handles pure JSON, mixed output with logs, and plain text fallback
+  - Multiple parsing strategies for various output formats
+  - Graceful error handling with detailed debug logging
+  - Automatic fallback to plain text if JSON parsing fails
+  - Memory updates handled automatically by the CLI
+
+- **Memory Management CLI Commands**:
+  - `gjob memory list` - List all jobs with stored memory
+  - `gjob memory show <jobName>` - View memory content for a specific job  
+  - `gjob memory clear <jobName>` - Clear stored memory for a job
+
+### Changed
+
+- **Memory Enabled by Default** - All jobs now automatically have persistent memory enabled
+- **Removed Configuration Complexity** - No need to set `enableMemory: true` in job configs
+- **Enhanced Prompt System** - Memory context and structured response instructions automatically added
+- **Job Execution Flow** - Jobs automatically load memory before execution and save memory after completion
+- **Error Handling** - Enhanced error handling for memory operations and JSON parsing with graceful fallbacks
+
+### Technical Details
+
+- Memory system uses JSON files for persistence with atomic write operations
+- Memory directory is automatically created when needed
+- Memory content includes metadata (lastUpdated) for debugging and monitoring
+- Full TypeScript support with proper type definitions
+- Async memory operations for better performance
+
 ## [1.0.1] - 2025-08-27
 
 ### Removed

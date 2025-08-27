@@ -4,6 +4,7 @@ import { log, error, setCliMode, cliSuccess, cliInfo, cliError, cliHeader } from
 import { runTemplatedJob, SimpleJobConfig, JobTemplateManager } from './jobs/templatedJob';
 import { EnvConfigLoader } from './utils/envConfigLoader';
 import { ContextLoader } from './utils/contextLoader';
+import { JobMemory } from './utils/jobMemory';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -191,6 +192,112 @@ async function main() {
         
         // Keep the process running
         process.stdin.resume();
+      }
+    )
+    .command(
+      'memory',
+      'Manage job memory',
+      (yargs) => {
+        return yargs
+          .command(
+            'list',
+            'List all jobs with memory',
+            {},
+            async () => {
+              try {
+                const memoryDir = JobMemory.getMemoryDirectory();
+                const fs = await import('fs');
+                const path = await import('path');
+                
+                if (!fs.existsSync(memoryDir)) {
+                  console.log('No job memories found.');
+                  return;
+                }
+                
+                const files = fs.readdirSync(memoryDir).filter(file => file.endsWith('.json'));
+                
+                if (files.length === 0) {
+                  console.log('No job memories found.');
+                  return;
+                }
+                
+                console.log('\n📝 Jobs with memory:');
+                for (const file of files) {
+                  const jobName = path.basename(file, '.json');
+                  const filePath = path.join(memoryDir, file);
+                  const stats = fs.statSync(filePath);
+                  console.log(`  ${jobName} (last modified: ${stats.mtime.toLocaleDateString()})`);
+                }
+                console.log();
+              } catch (err: any) {
+                error('Failed to list job memories:', err.message);
+                process.exit(1);
+              }
+            }
+          )
+          .command(
+            'show <jobName>',
+            'Show memory content for a specific job',
+            (yargs) => {
+              return yargs.positional('jobName', {
+                describe: 'Name of the job to show memory for',
+                type: 'string',
+                demandOption: true
+              });
+            },
+            async (argv) => {
+              try {
+                const memory = await JobMemory.loadJobMemory(argv.jobName);
+                
+                if (Object.keys(memory).length === 0) {
+                  console.log(`No memory found for job: ${argv.jobName}`);
+                  return;
+                }
+                
+                console.log(`\n📋 Memory for job: ${argv.jobName}`);
+                console.log('─'.repeat(40));
+                
+                for (const [key, value] of Object.entries(memory)) {
+                  console.log(`${key}: ${value}`);
+                }
+                console.log();
+              } catch (err: any) {
+                error(`Failed to show memory for job ${argv.jobName}:`, err.message);
+                process.exit(1);
+              }
+            }
+          )
+          .command(
+            'clear <jobName>',
+            'Clear memory for a specific job',
+            (yargs) => {
+              return yargs.positional('jobName', {
+                describe: 'Name of the job to clear memory for',
+                type: 'string',
+                demandOption: true
+              });
+            },
+            async (argv) => {
+              try {
+                const fs = await import('fs');
+                const path = await import('path');
+                const memoryDir = JobMemory.getMemoryDirectory();
+                const memoryFile = path.join(memoryDir, `${argv.jobName}.json`);
+                
+                if (fs.existsSync(memoryFile)) {
+                  fs.unlinkSync(memoryFile);
+                  console.log(`✅ Memory cleared for job: ${argv.jobName}`);
+                } else {
+                  console.log(`No memory found for job: ${argv.jobName}`);
+                }
+              } catch (err: any) {
+                error(`Failed to clear memory for job ${argv.jobName}:`, err.message);
+                process.exit(1);
+              }
+            }
+          )
+          .demandCommand(1, 'You need to specify a memory command')
+          .help();
       }
     )
     .demandCommand(1, 'You need to specify a command')

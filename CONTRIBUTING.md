@@ -123,7 +123,8 @@ src/
 ├── utils/
 │   ├── logger.ts           # Logging utilities
 │   ├── envConfigLoader.ts  # Environment configuration
-│   ├── contextLoader.ts    # Context file loading
+│   ├── templateLoader.ts   # Template file loading
+│   ├── jobMemory.ts        # Persistent job memory system
 │   ├── geminiCliCore.ts    # Gemini CLI integration
 │   └── alertNotifier.ts    # Notification system
 ├── index.ts                # Main CLI application entry
@@ -151,20 +152,28 @@ example/
 - Gemini CLI integration
 - Result processing and notifications
 
-#### 2. Context Loader (`src/utils/contextLoader.ts`)
+#### 2. Template Loader (`src/utils/templateLoader.ts`)
 
-- Loads context files by job type
+- Loads template/context files by job type
 - Combines multiple context files
 - Handles missing context gracefully
 
-#### 3. CLI Interface (`src/index.ts`)
+#### 3. Job Memory System (`src/utils/jobMemory.ts`)
+
+- Persistent key-value storage for jobs
+- Tracks state across job executions
+- Useful for timestamps, versions, and counters
+- Automatic memory directory management
+
+#### 4. CLI Interface (`src/index.ts`)
 
 - Yargs-based command structure
 - Configuration management
 - Job scheduling with node-cron
+- Memory management commands
 - Global installation support
 
-#### 4. Setup Wizard (`scripts/setup.js`)
+#### 5. Setup Wizard (`scripts/setup.js`)
 
 - Interactive job configuration
 - Environment setup
@@ -192,8 +201,8 @@ example/
      "schedules": ["0 9 * * 1"],
      "promptConfig": {
        "contextFiles": [
-         "templates/about.md",
-         "templates/my-custom-rules.md"
+         "context/about.md",
+         "context/my-custom-rules.md"
        ],
        "customPrompt": "Generate a detailed report focusing on {{focusAreas}}"
      }
@@ -202,11 +211,45 @@ example/
 
 3. **Context files are user-customizable**
    
-   Template files in `~/.gemini-cli-job/templates/` can be customized:
+   Context files in `~/.gemini-cli-job/context/` can be customized:
    - `about.md` - Organization and team information
    - `products.md` - Product and service details
    - `workflows.md` - Development processes
    - `*-rules.md` - Job-specific formatting guidelines
+
+4. **Memory system for persistent state**
+   
+   Jobs automatically have persistent memory enabled for storing data:
+   
+   ```typescript
+   // In job execution, memory is automatically loaded and made available
+   // Memory includes key-value pairs that persist between job runs
+   // Common use cases: lastUpdatedTime, version numbers, counters
+   ```
+
+### Adding New Memory Features
+
+1. **Extend JobMemory class** (`src/utils/jobMemory.ts`)
+   
+   Add new methods for specific memory operations:
+
+   ```typescript
+   // Add specialized memory methods
+   static async updateTimestamp(jobName: string, key: string): Promise<void> {
+     const memory = await JobMemory.loadJobMemory(jobName);
+     memory[key] = new Date().toISOString();
+     await JobMemory.saveJobMemory(jobName, memory);
+   }
+   ```
+
+2. **Add CLI commands** (`src/index.ts`)
+   
+   Extend the memory command group with new subcommands:
+
+   ```typescript
+   .command('export <jobName>', 'Export job memory to file', ...)
+   .command('import <jobName> <file>', 'Import job memory from file', ...)
+   ```
 
 ### Adding New CLI Commands
 

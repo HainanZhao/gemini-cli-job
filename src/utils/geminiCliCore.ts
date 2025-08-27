@@ -24,6 +24,11 @@ export class GeminiCliCore {
       debug(`Prompt length: ${prompt.length} characters`);
       debug(`Google Cloud Project: ${googleCloudProject || process.env.GOOGLE_CLOUD_PROJECT}`);
       
+      // Debug: Print the full context template content
+      debug('=== FULL PROMPT CONTENT ===');
+      debug(prompt);
+      debug('=== END PROMPT CONTENT ===');
+      
       // Use -m for model only, pass prompt via stdin for better handling of special characters
       const args = ['-m', model];
       debug(`Command: gemini ${args.join(' ')} (prompt via stdin)`);
