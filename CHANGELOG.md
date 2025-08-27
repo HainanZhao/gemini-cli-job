@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## [1.1.1] - 2025-08-27
+
+### Fixed
+
+- **Windows Compatibility** - Fixed `spawn gemini ENOENT` errors on Windows
+  - Cross-platform Gemini CLI command detection and execution
+  - Shell execution support for proper PATH resolution on Windows
+  - Enhanced error messages with platform-specific troubleshooting
+  - Simplified spawn configuration following proven working patterns
+
+### Changed
+
+- **Cross-Platform Execution** - Simplified and more reliable Gemini CLI execution across platforms
+- **Import Cleanup** - Removed unused imports for cleaner codebase
+
 ## [1.1.0] - 2025-08-27
 
 ### Added
@@ -34,6 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Global and per-job timeout configuration support
   - Default timeout remains 300000ms (5 minutes) if not specified
   - Helpful for long-running analysis or complex generation tasks
+
+- **Enhanced Debug Logging** - Comprehensive debug output for troubleshooting
+  - Raw Gemini CLI response logging with character counts
+  - Full prompt content logging for debugging context issues
+  - Platform detection and command execution details
+  - Bold formatting for custom prompt instructions to improve AI attention
 
 ### Changed
 

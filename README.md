@@ -271,6 +271,16 @@ Customize files in `~/.gemini-cli-job/context/` to improve AI output quality:
 2. Verify environment: Check `.env` file has correct `GOOGLE_CLOUD_PROJECT`
 3. Test Gemini CLI: Run `gemini --version` to confirm it's installed
 
+### Gemini CLI Not Found (Windows)?
+
+If you see `spawn gemini ENOENT` error on Windows:
+
+1. **Install Gemini CLI**: `npm install -g @google/gemini-cli`
+2. **Restart terminal** after installation to refresh PATH
+3. **Test installation**: Run `gemini --help` in a new terminal
+4. **Check PATH**: Ensure Node.js global packages are in PATH
+5. **Alternative**: Try running from Command Prompt as Administrator
+
 ### Poor AI Output Quality?
 
 1. **Update context files** - Add specific info about your team/products
