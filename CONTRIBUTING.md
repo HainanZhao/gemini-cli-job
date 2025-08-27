@@ -169,11 +169,11 @@ context/
 
 1. **Create template definition**
    
-   Templates are JSON files stored in `~/.gemini-cli-job/templates/`:
+   Templates are JSON files stored in `~/.gemini-cli-job/context/`:
 
    ```json
    {
-     "templateId": "my-new-template",
+     "contextFiles": "my-new-template",
      "templateName": "My New Template",
      "description": "Description of what this template does",
      "version": "1.0.0",

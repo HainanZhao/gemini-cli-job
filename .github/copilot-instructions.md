@@ -10,9 +10,9 @@ This project is a clean, standalone templated job system for AI-powered automati
 
 ## Key Components
 - `src/jobs/templatedJob.ts` - Core templated job system
-- `src/utils/` - Logging, configuration, context loading, and notifications
+- `src/utils/` - Logging, configuration, template loading, and notifications
 - `scripts/setup.js` - Interactive setup wizard
-- `context/` - Context files for different job types
+- `context/` - Template files for different job types
 
 ## Development Commands
 - `npm run build` - Compile TypeScript

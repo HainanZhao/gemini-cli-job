@@ -1,0 +1,24 @@
+{
+  "googleCloudProject": "ghpr-mgmt-ai",
+  "geminiOptions": {
+    "model": "gemini-2.0-flash"
+  },
+  "jobs": [
+    {
+      "jobName": "daily-standup-example",
+      "enabled": false,
+      "schedules": ["0 17 * * 5"],
+      "promptConfig": {
+        "contextFiles": [
+          "context/about.md",
+          "context/products.md",
+          "context/daily-standup-rules.md"
+        ],
+        "customPrompt": "Generate comprehensive report for me"
+      },
+      "geminiOptions": {
+        "model": "gemini-2.5-flash"
+      }
+    }
+  ]
+}

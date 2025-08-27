@@ -23,12 +23,12 @@ gjob setup
 This will:
 - Configure your Google Cloud Project and Gemini model
 - Create your first job from built-in templates
-- Generate sample context files for customization
+- Generate sample template files for customization
 - Set up scheduling (optional)
 
-### 2. Customize Context Files
+### 2. Customize Template Files
 
-Edit the generated context files in `~/.gemini-cli-job/context/`:
+Edit the generated template files in `~/.gemini-cli-job/context/`:
 
 - `about.md` - Your organization/team information
 - `products.md` - Your products and services
@@ -50,10 +50,20 @@ gjob start
 | Command | Description |
 |---------|-------------|
 | `gjob setup` | Interactive setup wizard |
-| `gjob list-templates` | Show available job templates |
+| `gjob templates` | Show template directory information |
 | `gjob list` | Show configured jobs |
 | `gjob run <jobName>` | Run a specific job immediately |
 | `gjob start` | Start the job scheduler |
+
+**Global Options:**
+- `--config`, `-c` - Path to config.json file (default: ~/.gemini-cli-job/config.json)
+
+**Examples:**
+```bash
+# Use custom config file
+gjob --config /path/to/my-config.json list
+gjob -c /path/to/my-config.json run my-job
+```
 
 **Command Aliases**: You can use `gjob`, `gemini-job`, or `gemini-cli-job` - they all work the same.
 
@@ -89,23 +99,96 @@ Your jobs are stored in `~/.gemini-cli-job/config.json`. Example:
 
 ```json
 {
+  "googleCloudProject": "your-gcp-project-id",
+  "geminiOptions": {
+    "model": "gemini-2.0-flash",
+    "temperature": 0.7
+  },
   "jobs": [
     {
       "jobName": "weekly-team-update",
-      "jobType": "templated",
       "enabled": true,
       "schedules": ["0 17 * * 5"],
-      "templateConfig": {
-        "templateId": "weekly-update",
-        "parameters": {
-          "teamName": "Engineering",
-          "users": ["alice@company.com", "bob@company.com"]
-        }
+      "promptConfig": {
+        "contextFiles": ["context/weekly-update-rules.md"],
+        "customPrompt": "Focus on engineering team achievements and blockers"
+      },
+      "geminiOptions": {
+        "model": "gemini-2.0-pro",
+        "temperature": 0.7
       }
     }
   ]
 }
 ```
+
+#### Multi-Template Support
+
+You can use multiple template files for richer context:
+
+```json
+{
+  "jobs": [
+    {
+      "jobName": "comprehensive-report",
+      "enabled": true,
+      "schedules": ["0 9 * * 1"],
+      "promptConfig": {
+        "contextFiles": [
+          "context/about.md",
+          "context/release-notes-rules.md", 
+          "context/products.md"
+        ],
+        "customPrompt": "Generate comprehensive weekly report"
+      }
+    }
+  ]
+}
+```
+
+#### Gemini Options Configuration
+
+You can configure Google Cloud Project and Gemini model settings globally in your config.json, with optional per-job overrides. Global settings take priority over environment variables, and job-specific settings override global settings:
+
+```json
+{
+  "googleCloudProject": "your-gcp-project-id",
+  "geminiOptions": {
+    "model": "gemini-2.0-flash-exp",
+    "temperature": 0.7
+  },
+  "jobs": [
+    {
+      "jobName": "standard-report",
+      "enabled": true,
+      "schedules": ["0 9 * * 1"],
+      "promptConfig": {
+        "contextFiles": ["context/weekly-rules.md"],
+        "customPrompt": "Generate weekly report"
+      }
+    },
+    {
+      "jobName": "creative-content",
+      "enabled": true,
+      "schedules": ["0 14 * * 3"],
+      "promptConfig": {
+        "contextFiles": ["context/content-rules.md"],
+        "customPrompt": "Generate creative content"
+      },
+      "geminiOptions": {
+        "temperature": 0.9,
+        "maxTokens": 4096
+      }
+    }
+  ]
+}
+```
+
+Available configuration options:
+- `googleCloudProject` - Google Cloud Project ID (overrides `GOOGLE_CLOUD_PROJECT` environment variable)
+- `geminiOptions.model` - Gemini model to use (overrides `GEMINI_MODEL` environment variable)
+- `geminiOptions.temperature` - Controls randomness (0.0-1.0) *[Note: Currently not supported by Gemini CLI, kept for future compatibility]*
+- `geminiOptions.maxTokens` - Maximum tokens to generate *[Note: Currently not supported by Gemini CLI, kept for future compatibility]*
 
 ### Environment Variables
 
@@ -117,7 +200,21 @@ GEMINI_MODEL=gemini-1.5-flash
 OPSGENIE_API_KEY=your-key-here  # Optional, for notifications
 ```
 
-### Context Files
+### Authentication Setup
+
+Before running jobs, ensure proper authentication:
+
+1. **Install Google Cloud CLI**: `gcloud auth application-default login`
+2. **Verify project access**: `gcloud config set project your-gcp-project-id`
+3. **Enable Gemini API**: Enable the Generative AI API in your Google Cloud project
+4. **Test authentication**: `gemini --help` (should work without errors)
+
+**Common authentication issues:**
+- `404 Requested entity was not found` → Check project ID and API access
+- `Permission denied` → Verify your account has Generative AI permissions
+- `Invalid credentials` → Run `gcloud auth application-default login` again
+
+### Template Files
 
 Customize files in `~/.gemini-cli-job/context/` to improve AI output quality:
 
@@ -187,9 +284,9 @@ Available Job Templates:
 3. Test Gemini CLI: Run `gemini --version` to confirm it's installed
 
 ### Poor AI Output Quality?
-1. **Update context files** - Add specific info about your team/products
+1. **Update template files** - Add specific info about your team/products
 2. **Improve job parameters** - Be more specific in template parameters
-3. **Check context loading** - Ensure context files exist and have content
+3. **Check context loading** - Ensure template files exist and have content
 
 ### Scheduling Issues?
 1. **Verify cron format** - Use [crontab.guru](https://crontab.guru) to validate
@@ -286,8 +383,8 @@ Jobs are configured in `~/.gemini-cli-job/config.json`:
       "jobType": "templated", 
       "enabled": true,
       "schedules": ["0 9 * * 1"],
-      "templateConfig": {
-        "templateId": "release-notes",
+      "promptConfig": {
+        "contextFiles": "release-notes",
         "parameters": {
           "projectName": "frontend-app"
         }
@@ -313,8 +410,8 @@ GEMINI_NOTIFICATION_ENABLED=true
 OPSGENIE_API_KEY=your-key-here  # Optional
 ```
 
-### Context Files
-Customize context files in `./context/`:
+### Template Files
+Customize template files in `./context/`:
 - `about.md` - Organization and team info
 - `release-notes-rules.md` - Rules for release notes
 - `weekly-update-rules.md` - Rules for weekly updates  
@@ -324,18 +421,18 @@ Customize context files in `./context/`:
 
 ## Creating Custom Templates
 
-Templates are stored in `~/.gemini-cli-job/templates/`. Each template is a JSON file defining:
+Templates are stored in `~/.gemini-cli-job/context/`. Each template is a JSON file defining:
 
 - **Parameters** - What inputs the template accepts
 - **Prompt template** - How to generate the AI prompt
-- **Context type** - Which context files to load
+- **Context type** - Which template files to load
 - **Output processing** - How to format results
 - **Notifications** - Success/error message templates
 
 Example custom template:
 ```json
 {
-  "templateId": "my-custom-template",
+  "contextFiles": "my-custom-template",
   "templateName": "My Custom Report",
   "description": "Generate custom reports",
   "version": "1.0.0",
@@ -387,7 +484,7 @@ src/
 ├── utils/
 │   ├── logger.ts           # Logging utilities
 │   ├── envConfigLoader.ts  # Environment configuration
-│   ├── contextLoader.ts    # Context file loading
+│   ├── templateLoader.ts    # Context file loading
 │   ├── geminiCliCore.ts    # Gemini CLI integration
 │   └── alertNotifier.ts    # Notification system
 └── index.ts                # Main application entry

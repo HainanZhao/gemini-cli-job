@@ -4,45 +4,65 @@ import { log, error } from './logger';
 /**
  * Gemini CLI Core Integration
  * Handles execution of Gemini CLI commands
+ * 
+ * Note: Currently, the Gemini CLI only supports model selection via command line.
+ * but are not currently passed to the CLI.
  */
 export interface GeminiOptions {
   model?: string;
-  temperature?: number;
-  maxTokens?: number;
 }
 
 export class GeminiCliCore {
   /**
    * Execute Gemini CLI with the provided prompt
    */
-  async executeGemini(prompt: string, options: GeminiOptions = {}): Promise<{ stdout: string; stderr: string }> {
-    const model = options.model || 'gemini-1.5-flash';
+  async executeGemini(prompt: string, options: GeminiOptions = {}, googleCloudProject?: string): Promise<{ stdout: string; stderr: string }> {
+    const model = options.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     
     return new Promise((resolve, reject) => {
       log(`Executing Gemini CLI with model: ${model}`);
+      log(`Prompt length: ${prompt.length} characters`);
+      log(`Google Cloud Project: ${googleCloudProject || process.env.GOOGLE_CLOUD_PROJECT}`);
       
-      const args = ['--model', model];
+      // Use -m for model only, pass prompt via stdin for better handling of special characters
+      const args = ['-m', model];
+      log(`Command: gemini ${args.join(' ')} (prompt via stdin)`);
       
-      if (options.temperature !== undefined) {
-        args.push('--temperature', options.temperature.toString());
-      }
+      // Add timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        log('Gemini CLI timeout after 60 seconds, killing process');
+        geminiProcess.kill('SIGTERM');
+        reject(new Error('Gemini CLI execution timed out after 300 seconds'));
+      }, 300_000);
       
       const geminiProcess = spawn('gemini', args, {
-        stdio: ['pipe', 'pipe', 'pipe']
+        stdio: ['pipe', 'pipe', 'pipe'],
+        cwd: '/tmp', // Use /tmp to avoid loading project context
+        env: {
+          ...process.env, // Inherit all environment variables
+          GOOGLE_CLOUD_PROJECT: googleCloudProject || process.env.GOOGLE_CLOUD_PROJECT,
+          GEMINI_MODEL: options.model || process.env.GEMINI_MODEL,
+        }
       });
       
       let stdout = '';
       let stderr = '';
       
       geminiProcess.stdout?.on('data', (data) => {
-        stdout += data.toString();
+        const chunk = data.toString();
+        log(`[STDOUT] ${chunk.substring(0, 200)}${chunk.length > 200 ? '...' : ''}`);
+        stdout += chunk;
       });
       
       geminiProcess.stderr?.on('data', (data) => {
-        stderr += data.toString();
+        const chunk = data.toString();
+        log(`[STDERR] ${chunk.substring(0, 200)}${chunk.length > 200 ? '...' : ''}`);
+        stderr += chunk;
       });
       
       geminiProcess.on('close', (code) => {
+        clearTimeout(timeout);
+        log(`Gemini CLI process closed with code: ${code}`);
         if (code === 0) {
           log('Gemini CLI execution completed successfully');
           resolve({ stdout: stdout.trim(), stderr: stderr.trim() });
@@ -54,10 +74,13 @@ export class GeminiCliCore {
       });
       
       geminiProcess.on('error', (err) => {
+        clearTimeout(timeout);
         const errorMessage = `Failed to execute Gemini CLI: ${err.message}`;
         error(errorMessage);
         reject(new Error(errorMessage));
       });
+      
+      log('Gemini CLI process started, waiting for response...');
       
       // Send the prompt to stdin
       geminiProcess.stdin?.write(prompt);

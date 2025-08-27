@@ -16,9 +16,15 @@ const rl = readline.createInterface({
 
 class SimpleSetup {
   constructor() {
-    this.configDir = path.join(os.homedir(), '.gemini-cli-job');
+    // Use custom config directory if provided as command line argument
+    const customConfigDir = process.argv[2];
+    this.configDir = customConfigDir || path.join(os.homedir(), '.gemini-cli-job');
     this.configPath = path.join(this.configDir, 'config.json');
     this.envPath = path.join(process.cwd(), '.env');
+    
+    if (customConfigDir) {
+      console.log(`Using custom config directory: ${this.configDir}`);
+    }
   }
 
   async run() {
@@ -62,27 +68,12 @@ class SimpleSetup {
     const config = {
       jobs: [{
         jobName: `${projectName}-release-notes`,
-        jobType: 'templated',
         enabled: false, // Start disabled for safety
-        schedules: ['0 9 * * 1'], // Monday 9 AM
+        schedules: this.getTemplateSchedules('release-notes'),
         
-        templateConfig: {
-          templateId: 'release-notes',
-          parameters: {
-            projectName: projectName
-          }
-        },
-        
-        notificationConfig: {
-          type: 'console',
-          message: `Release Notes: ${projectName}`,
-          alias: `${projectName}-releases`,
-          description: 'Weekly release notes',
-          teams: [],
-          tags: ['release-notes'],
-          details: {},
-          entity: projectName,
-          priority: 'P4'
+        promptConfig: {
+          contextFiles: ['context/release-notes-rules.md'],
+          customPrompt: `Generate release notes for project: ${projectName}`
         }
       }]
     };
@@ -107,7 +98,7 @@ GEMINI_NOTIFICATION_ENABLED="true"
     console.log(`📝 Context files ready for customization\\n`);
     
     console.log('🚀 Next steps:');
-    console.log('1. Update context files in ~/.gemini-cli-job/context/');
+    console.log('1. Update template files in ~/.gemini-cli-job/context/');
     console.log('2. Test: gjob run ' + `${projectName}-release-notes`);
     console.log('3. Enable: Edit config and set "enabled": true');
     console.log('4. Start scheduler: gjob start\\n');
@@ -154,7 +145,7 @@ GEMINI_NOTIFICATION_ENABLED="true"
     console.log(`📝 Context files ready for customization\\n`);
     
     console.log('🧪 Next steps:');
-    console.log('1. Update context files in ~/.gemini-cli-job/context/');
+    console.log('1. Update template files in ~/.gemini-cli-job/context/');
     console.log('2. Test: gjob run ' + jobName);
     console.log('3. Enable and start: gjob start\\n');
   }
@@ -162,89 +153,52 @@ GEMINI_NOTIFICATION_ENABLED="true"
   async createJobConfig(jobType, jobName) {
     switch (jobType) {
       case '1': // Release Notes
-        const projectName = await this.ask('Project name: ');
+        const customPrompt1 = await this.ask('Custom prompt to append (optional): ') || '';
         return {
           jobName: jobName,
-          jobType: 'templated',
           enabled: false,
-          schedules: ['0 9 * * 1'],
-          templateConfig: {
-            templateId: 'release-notes',
-            parameters: { projectName: projectName }
-          },
-          notificationConfig: this.createNotificationConfig(`Release Notes: ${projectName}`)
+          schedules: this.getTemplateSchedules('release-notes'),
+          promptConfig: {
+            contextFiles: ['context/release-notes-rules.md'],
+            customPrompt: customPrompt1 || undefined
+          }
         };
 
       case '2': // Weekly Updates  
-        const teamName = await this.ask('Team name: ');
-        const users = await this.ask('Team emails (comma-separated): ');
+        const customPrompt2 = await this.ask('Custom prompt to append (optional): ') || '';
         return {
           jobName: jobName,
-          jobType: 'templated', 
           enabled: false,
-          schedules: ['0 17 * * 5'],
-          templateConfig: {
-            templateId: 'weekly-update',
-            parameters: {
-              users: users.split(',').map(u => u.trim()),
-              teamName: teamName
-            }
-          },
-          notificationConfig: this.createNotificationConfig(`Weekly Update: ${teamName}`)
+          schedules: this.getTemplateSchedules('weekly-update'),
+          promptConfig: {
+            contextFiles: ['context/weekly-update-rules.md'],
+            customPrompt: customPrompt2 || undefined
+          }
         };
 
       case '3': // Daily Standups
-        const dailyTeam = await this.ask('Team name: ');
-        const dailyUsers = await this.ask('Team emails (comma-separated): ');
+        const customPrompt3 = await this.ask('Custom prompt to append (optional): ') || '';
         return {
           jobName: jobName,
-          jobType: 'templated',
-          enabled: false, 
-          schedules: ['0 8 * * 1-5'],
-          templateConfig: {
-            templateId: 'daily-standup',
-            parameters: {
-              users: dailyUsers.split(',').map(u => u.trim()),
-              teamName: dailyTeam
-            }
-          },
-          notificationConfig: this.createNotificationConfig(`Daily Standup: ${dailyTeam}`)
-        };
-
-      case '4': // Custom
-      default:
-        const prompt = await this.ask('Custom AI prompt: ');
-        const focusAreas = await this.ask('Focus areas: ');
-        return {
-          jobName: jobName,
-          jobType: 'templated',
           enabled: false,
-          schedules: ['0 9 * * 1'],
-          templateConfig: {
-            templateId: 'custom-report',
-            parameters: {
-              reportType: 'custom',
-              customPrompt: prompt,
-              focusAreas: focusAreas
-            }
-          },
-          notificationConfig: this.createNotificationConfig('Custom Report')
+          schedules: this.getTemplateSchedules('daily-standup'),
+          promptConfig: {
+            contextFiles: ['context/daily-standup-rules.md'],
+            customPrompt: customPrompt3 || undefined
+          }
+        };      case '4': // Custom
+      default:
+        const customPrompt = await this.ask('Your custom AI prompt: ');
+        return {
+          jobName: jobName,
+          enabled: false,
+          schedules: this.getTemplateSchedules('custom'),
+          promptConfig: {
+            contextFiles: ['custom'],
+            customPrompt: customPrompt
+          }
         };
     }
-  }
-
-  createNotificationConfig(message) {
-    return {
-      type: 'console',
-      message: message,
-      alias: message.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-      description: `Generated by setup: ${message}`,
-      teams: [],
-      tags: ['gemini-cli-job'],
-      details: {},
-      entity: message,
-      priority: 'P4'
-    };
   }
 
   async showExamples() {
@@ -254,55 +208,60 @@ GEMINI_NOTIFICATION_ENABLED="true"
     console.log('🎯 Simple Release Notes Job:');
     console.log(JSON.stringify({
       jobName: 'my-app-releases',
-      jobType: 'templated',
       enabled: true,
-      schedules: ['0 9 * * 1'],
-      templateConfig: {
-        templateId: 'release-notes',
-        parameters: { projectName: 'my-app' }
+      schedules: this.getTemplateSchedules('release-notes'),
+      promptConfig: {
+        contextFiles: ['context/release-notes-rules.md'],
+        customPrompt: 'Generate release notes for my-app project, focusing on user-facing changes'
       }
     }, null, 2));
 
     console.log('\\n📊 Team Weekly Update:');
     console.log(JSON.stringify({
       jobName: 'team-weekly',
-      jobType: 'templated', 
       enabled: true,
-      schedules: ['0 17 * * 5'],
-      templateConfig: {
-        templateId: 'weekly-update',
-        parameters: {
-          users: ['dev1@company.com', 'dev2@company.com'],
-          teamName: 'Frontend Team'
-        }
+      schedules: this.getTemplateSchedules('weekly-update'),
+      promptConfig: {
+        contextFiles: ['context/weekly-update-rules.md'],
+        customPrompt: 'Generate weekly update for Frontend Team, include velocity metrics and upcoming deadlines'
       }
     }, null, 2));
 
     console.log('\\n📝 Custom Report:');
     console.log(JSON.stringify({
       jobName: 'monthly-metrics',
-      jobType: 'templated',
       enabled: true, 
-      schedules: ['0 9 1 * *'],
-      templateConfig: {
-        templateId: 'custom-report',
-        parameters: {
-          reportType: 'monthly',
-          customPrompt: 'Generate team productivity metrics',
-          focusAreas: 'velocity, quality, collaboration'
-        }
+      schedules: this.getTemplateSchedules('custom'),
+      promptConfig: {
+        contextFiles: ['custom'],
+        customPrompt: 'Generate monthly team productivity metrics report focusing on velocity, quality, and collaboration'
       }
     }, null, 2));
 
-    console.log('\\n📚 Learn more: Check the templates directory for full documentation\\n');
+    console.log('\\n� Multi-Template Job (NEW!):');
+    console.log(JSON.stringify({
+      jobName: 'comprehensive-report',
+      enabled: true,
+      schedules: ['0 9 * * 1'],
+      promptConfig: {
+        contextFiles: [
+          'context/about.md',
+          'context/release-notes-rules.md',
+          'context/weekly-update-rules.md'
+        ],
+        customPrompt: 'Generate a comprehensive weekly report combining all context'
+      }
+    }, null, 2));
+
+    console.log('\\n�📚 Learn more: Check the templates directory for full documentation\\n');
   }
 
   generateContextFiles() {
-    const contextDir = path.join(this.configDir, 'context');
+    const templateDir = path.join(this.configDir, 'templates');
     
-    // Ensure context directory exists
-    if (!fs.existsSync(contextDir)) {
-      fs.mkdirSync(contextDir, { recursive: true });
+    // Ensure template directory exists
+    if (!fs.existsSync(templateDir)) {
+      fs.mkdirSync(templateDir, { recursive: true });
     }
 
     const sampleContextFiles = {
@@ -454,7 +413,7 @@ Update with your actual workflows and processes.`
 
     // Generate each context file
     Object.entries(sampleContextFiles).forEach(([filename, content]) => {
-      const filePath = path.join(contextDir, filename);
+      const filePath = path.join(templateDir, filename);
       
       if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, content);
@@ -464,13 +423,23 @@ Update with your actual workflows and processes.`
       }
     });
 
-    console.log(`📁 Sample context files available in: ${contextDir}`);
+    console.log(`📁 Sample template files available in: ${templateDir}`);
   }
 
   ensureConfigDir() {
     if (!fs.existsSync(this.configDir)) {
       fs.mkdirSync(this.configDir, { recursive: true });
     }
+  }
+
+  getTemplateSchedules(templateType) {
+    const schedules = {
+      'release-notes': ['0 9 * * 1'], // Monday 9 AM
+      'weekly-update': ['0 17 * * 5'], // Friday 5 PM  
+      'daily-standup': ['0 8 * * 1-5'], // Weekdays 8 AM
+      'custom': ['0 9 * * 1'] // Monday 9 AM default
+    };
+    return schedules[templateType] || ['0 9 * * 1'];
   }
 
   ask(question) {

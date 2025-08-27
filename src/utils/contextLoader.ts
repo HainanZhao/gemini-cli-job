@@ -4,12 +4,11 @@ import * as os from 'os';
 import { log, error } from './logger';
 
 /**
- * Context Loader
- * Loads context files for different job types
+ * Template Loader
+ * Loads template files for different job types
  */
 export class ContextLoader {
   private static contextDir = path.join(os.homedir(), '.gemini-cli-job', 'context');
-  private static builtInContextDir = path.join(__dirname, '../../context');
 
   /**
    * Load context by type (releaseNotes, weeklyUpdate, etc.)
@@ -52,12 +51,15 @@ export class ContextLoader {
   }
 
   /**
-   * Generate sample context files in user's config directory
+   * Generate sample template files in the specified config directory
    */
-  static generateSampleContextFiles(): void {
-    // Ensure context directory exists
-    if (!fs.existsSync(this.contextDir)) {
-      fs.mkdirSync(this.contextDir, { recursive: true });
+  static generateSampleTemplateFiles(configDir?: string): void {
+    const targetTemplateDir = configDir ? path.join(configDir, 'templates') : this.contextDir;
+    
+    // Ensure template directory exists
+    if (!fs.existsSync(targetTemplateDir)) {
+      fs.mkdirSync(targetTemplateDir, { recursive: true });
+      log(`Created template directory: ${targetTemplateDir}`);
     }
 
     const sampleContextFiles = {
@@ -214,7 +216,7 @@ Update with your actual workflows and processes.`
 
     // Generate each context file
     Object.entries(sampleContextFiles).forEach(([filename, content]) => {
-      const filePath = path.join(this.contextDir, filename);
+      const filePath = path.join(targetTemplateDir, filename);
       
       if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, content);
@@ -224,7 +226,7 @@ Update with your actual workflows and processes.`
       }
     });
 
-    log(`Sample context files available in: ${this.contextDir}`);
+    log(`Sample template files available in: ${this.contextDir}`);
     log('Please update these files with your specific information before running jobs.');
   }
 
@@ -244,9 +246,9 @@ Update with your actual workflows and processes.`
   }
 
   /**
-   * Initialize context directory with default files if they don't exist
+   * Initialize template directory with default files if they don't exist
    */
-  static async initializeDefaultContext(): Promise<void> {
+  static async initializeDefaultTemplates(): Promise<void> {
     if (!fs.existsSync(this.contextDir)) {
       fs.mkdirSync(this.contextDir, { recursive: true });
     }
