@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 import * as cron from 'node-cron';
-import { log, error, setCliMode, cliSuccess, cliInfo, cliError, cliHeader, getLogDirectory, getTodayLogFilePath, cleanupOldLogs, enableConsoleCapture, disableConsoleCapture, logJobExecution } from './utils/logger';
+import { log, error, setCliMode, cliSuccess, cliInfo, cliError, cliHeader, getLogDirectory, getTodayLogFilePath, cleanupOldLogs, enableConsoleCapture, logJobExecution } from './utils/logger';
 import { runTemplatedJob, SimpleJobConfig, JobTemplateManager } from './jobs/templatedJob';
 import { EnvConfigLoader } from './utils/envConfigLoader';
-import { ContextLoader } from './utils/contextLoader';
 import { JobMemory } from './utils/jobMemory';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -24,18 +23,6 @@ interface Config {
 // Global config directory - can be overridden via CLI
 let configDirectory = path.join(os.homedir(), '.gemini-cli-job');
 let configPath = path.join(configDirectory, 'config.json');
-
-// Helper to set config directory and update all paths
-function setConfigDirectory(customDir: string) {
-  configDirectory = path.resolve(customDir);
-  configPath = path.join(configDirectory, 'config.json');
-}
-
-// Helper to set config file path directly
-function setConfigFile(configFilePath: string) {
-  configPath = path.resolve(configFilePath);
-  configDirectory = path.dirname(configPath);
-}
 
 async function loadConfigurationQuietly(): Promise<Config> {
   try {
@@ -173,10 +160,14 @@ async function main() {
           return;
         }
         
-        console.log(`\n📅 Scheduling ${config.jobs.length} job(s):`);
+        // Filter enabled jobs for scheduling
+        const enabledJobs = config.jobs.filter((job: SimpleJobConfig) => job.enabled);
+        const scheduledJobs = enabledJobs.filter((job: SimpleJobConfig) => job.schedules && job.schedules.length > 0);
+        
+        console.log(`\n📅 Scheduling ${scheduledJobs.length} job(s) (${enabledJobs.length} enabled, ${config.jobs.length} total):`);
         
         // Schedule jobs
-        config.jobs.filter((job: SimpleJobConfig) => job.enabled).forEach((job: SimpleJobConfig) => {
+        enabledJobs.forEach((job: SimpleJobConfig) => {
           const schedulesList = job.schedules?.join(', ') || 'manual';
           console.log(`📋 ${job.jobName}: ${schedulesList}`);
           
