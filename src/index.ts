@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as cron from 'node-cron';
-import { log, error, setCliMode, cliSuccess, cliInfo, cliError, cliHeader } from './utils/logger';
+import { log, error, setCliMode, cliSuccess, cliInfo, cliError, cliHeader, getLogDirectory, getTodayLogFilePath, cleanupOldLogs } from './utils/logger';
 import { runTemplatedJob, SimpleJobConfig, JobTemplateManager } from './jobs/templatedJob';
 import { EnvConfigLoader } from './utils/envConfigLoader';
 import { ContextLoader } from './utils/contextLoader';
@@ -298,6 +298,107 @@ async function main() {
           )
           .demandCommand(1, 'You need to specify a memory command')
           .help();
+      }
+    )
+    .command(
+      'logs',
+      'Manage log files',
+      (yargs) => {
+        return yargs
+          .option('path', {
+            type: 'boolean',
+            description: 'Show log directory path'
+          })
+          .option('today', {
+            type: 'boolean',
+            description: 'Show today\'s log file path'
+          })
+          .option('cleanup', {
+            type: 'number',
+            description: 'Clean up log files older than specified days'
+          })
+          .check((argv) => {
+            // Only allow one option at a time
+            const options = [argv.path, argv.today, argv.cleanup !== undefined];
+            const optionCount = options.filter(Boolean).length;
+            
+            if (optionCount > 1) {
+              throw new Error('Please specify only one option at a time');
+            }
+            
+            return true;
+          });
+      },
+      async (argv) => {
+        if (argv.path) {
+          // Show log directory path
+          const logDir = getLogDirectory();
+          cliInfo(`Log directory: ${logDir}`);
+        } else if (argv.today) {
+          // Show today's log file path
+          const todayLogFile = getTodayLogFilePath();
+          cliInfo(`Today's log file: ${todayLogFile}`);
+        } else if (argv.cleanup !== undefined) {
+          // Clean up old log files
+          const days = argv.cleanup as number;
+          if (days < 0) {
+            cliError('Days must be a positive number');
+            process.exit(1);
+          }
+          
+          cliHeader(`Cleaning up log files older than ${days} days`);
+          cleanupOldLogs(days);
+          cliSuccess('Log cleanup completed');
+        } else {
+          // Default: Display log information dashboard
+          const logDir = getLogDirectory();
+          const todayLogFile = getTodayLogFilePath();
+          
+          cliHeader('Log Information Dashboard');
+          console.log(`📁 Log Directory: ${logDir}`);
+          console.log(`📄 Today's Log File: ${todayLogFile}`);
+          
+          // Show recent log files
+          try {
+            if (fs.existsSync(logDir)) {
+              const files = fs.readdirSync(logDir)
+                .filter(file => file.endsWith('.log'))
+                .map(file => {
+                  const filePath = path.join(logDir, file);
+                  const stats = fs.statSync(filePath);
+                  return {
+                    name: file,
+                    path: filePath,
+                    size: stats.size,
+                    modified: stats.mtime
+                  };
+                })
+                .sort((a, b) => b.modified.getTime() - a.modified.getTime())
+                .slice(0, 5); // Show last 5 files
+              
+              if (files.length > 0) {
+                console.log('\n📋 Recent Log Files:');
+                files.forEach(file => {
+                  const sizeKB = Math.round(file.size / 1024);
+                  const modifiedDate = file.modified.toLocaleDateString();
+                  console.log(`  📄 ${file.name} (${sizeKB} KB, ${modifiedDate})`);
+                });
+              } else {
+                console.log('\n📝 No log files found');
+              }
+            } else {
+              console.log('\n📝 Log directory does not exist yet');
+            }
+          } catch (err: any) {
+            console.log('\n⚠️  Could not read log directory');
+          }
+          
+          console.log('\n💡 Usage:');
+          console.log('  gjob logs --path     Show log directory path');
+          console.log('  gjob logs --today    Show today\'s log file path');
+          console.log('  gjob logs --cleanup <days>  Clean up old log files');
+          console.log();
+        }
       }
     )
     .demandCommand(1, 'You need to specify a command')

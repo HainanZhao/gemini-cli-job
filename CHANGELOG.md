@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## [1.1.2] - 2025-08-28
+
+### Added
+
+- **File Logging System** - All logs are now automatically saved to date-based files
+  - Daily log files stored in `~/.gemini-cli-job/logs/YYYY-MM-DD.log`
+  - Comprehensive logging of all console output, debug info, and job execution details
+  - Automatic log directory creation and management
+  - Silent fallback handling to prevent logging errors from crashing the application
+
+- **Log Management CLI Commands** - New `gjob logs` command with comprehensive options
+  - `gjob logs` - Display log information dashboard with recent files
+  - `gjob logs --path` - Show log directory path
+  - `gjob logs --today` - Show today's log file path
+  - `gjob logs --cleanup <days>` - Clean up log files older than specified days
+
+- **Enhanced Logger Functions** - Extended logging capabilities
+  - `cliSuccess()`, `cliInfo()`, `cliError()`, `cliHeader()` - CLI-specific formatted output
+  - `getLogDirectory()`, `getTodayLogFilePath()` - Utility functions for log management
+  - `cleanupOldLogs()` - Automatic cleanup of old log files
+
+### Changed
+
+- **All Log Functions Enhanced** - Every log message now writes to both console and file
+  - Maintains existing console behavior while adding persistent file logging
+  - Structured log entries with timestamps, levels, and JSON serialization for objects
+  - Debug logs only write to file when `DEBUG=true` environment variable is set
+
 ## [1.1.1] - 2025-08-27
 
 ### Fixed
