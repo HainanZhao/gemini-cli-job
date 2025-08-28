@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as cron from 'node-cron';
-import { log, error, setCliMode, cliSuccess, cliInfo, cliError, cliHeader, getLogDirectory, getTodayLogFilePath, cleanupOldLogs } from './utils/logger';
+import { log, error, setCliMode, cliSuccess, cliInfo, cliError, cliHeader, getLogDirectory, getTodayLogFilePath, cleanupOldLogs, enableConsoleCapture, disableConsoleCapture, logJobExecution } from './utils/logger';
 import { runTemplatedJob, SimpleJobConfig, JobTemplateManager } from './jobs/templatedJob';
 import { EnvConfigLoader } from './utils/envConfigLoader';
 import { ContextLoader } from './utils/contextLoader';
@@ -63,6 +63,9 @@ async function loadConfigurationQuietly(): Promise<Config> {
 }
 
 async function main() {
+  // Enable console capture for comprehensive logging
+  enableConsoleCapture();
+  
   // Enable CLI mode for clean output on CLI commands
   setCliMode(true);
 
@@ -143,10 +146,12 @@ async function main() {
         );
         
         if (jobToRun) {
+          logJobExecution(jobToRun.jobName, 'Starting manual job execution');
           console.log(`\n🚀 Running job: ${jobToRun.jobName}\n`);
           // Disable CLI mode for job execution to get detailed logs
           setCliMode(false);
           await runTemplatedJob(jobToRun, configDirectory, config.geminiOptions, config.googleCloudProject);
+          logJobExecution(jobToRun.jobName, 'Manual job execution completed');
         } else {
           console.log(`\n❌ Job not found: ${argv.jobName}`);
           console.log('\nAvailable jobs:');
@@ -178,11 +183,13 @@ async function main() {
           if (job.schedules && job.schedules.length > 0) {
             job.schedules.forEach((schedule: string) => {
               cron.schedule(schedule, async () => {
+                logJobExecution(job.jobName, `Starting scheduled execution (${schedule})`);
                 console.log(`\n⏰ Executing scheduled job: ${job.jobName}`);
                 // Disable CLI mode for job execution
                 setCliMode(false);
                 await runTemplatedJob(job, configDirectory, config.geminiOptions, config.googleCloudProject);
                 setCliMode(true);
+                logJobExecution(job.jobName, 'Scheduled execution completed');
               });
             });
           }
@@ -355,8 +362,13 @@ async function main() {
           const todayLogFile = getTodayLogFilePath();
           
           cliHeader('Log Information Dashboard');
-          console.log(`📁 Log Directory: ${logDir}`);
-          console.log(`📄 Today's Log File: ${todayLogFile}`);
+          console.error('DEBUG: About to call log() functions');
+          console.error(`DEBUG: logDir = "${logDir}"`);
+          console.error(`DEBUG: todayLogFile = "${todayLogFile}"`);
+          log('TESTING-SIMPLE-LOG');
+          log('TESTING-LOG-CAPTURE-LOGDIR', logDir);
+          log('TESTING-LOG-CAPTURE-TODAY', todayLogFile);
+          console.error('DEBUG: All log() calls completed');
           
           // Show recent log files
           try {
@@ -377,27 +389,27 @@ async function main() {
                 .slice(0, 5); // Show last 5 files
               
               if (files.length > 0) {
-                console.log('\n📋 Recent Log Files:');
+                log('\n📋 Recent Log Files:');
                 files.forEach(file => {
                   const sizeKB = Math.round(file.size / 1024);
                   const modifiedDate = file.modified.toLocaleDateString();
-                  console.log(`  📄 ${file.name} (${sizeKB} KB, ${modifiedDate})`);
+                  log(`  📄 ${file.name} (${sizeKB} KB, ${modifiedDate})`);
                 });
               } else {
-                console.log('\n📝 No log files found');
+                log('\n📝 No log files found');
               }
             } else {
-              console.log('\n📝 Log directory does not exist yet');
+              log('\n📝 Log directory does not exist yet');
             }
           } catch (err: any) {
-            console.log('\n⚠️  Could not read log directory');
+            log('\n⚠️  Could not read log directory');
           }
           
-          console.log('\n💡 Usage:');
-          console.log('  gjob logs --path     Show log directory path');
-          console.log('  gjob logs --today    Show today\'s log file path');
-          console.log('  gjob logs --cleanup <days>  Clean up old log files');
-          console.log();
+          log('\n💡 Usage:');
+          log('  gjob logs --path     Show log directory path');
+          log('  gjob logs --today    Show today\'s log file path');
+          log('  gjob logs --cleanup <days>  Clean up old log files');
+          log('');
         }
       }
     )

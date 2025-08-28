@@ -1,4 +1,4 @@
-import { log, error, debug } from '../utils/logger';
+import { log, error, debug, logJobExecution } from '../utils/logger';
 import { GeminiCliCore } from '../utils/geminiCliCore';
 import { EnvConfigLoader } from '../utils/envConfigLoader';
 import { JobMemory } from '../utils/jobMemory';
@@ -153,9 +153,9 @@ export async function runSimpleJob(jobConfig: SimpleJobConfig, configDir?: strin
   try {
     // Load environment configuration to ensure Gemini CLI has proper credentials
     const envConfig = EnvConfigLoader.loadEnvConfig();
-    log(`Environment loaded: Project=${envConfig.googleCloudProject}, Model=${envConfig.geminiModel}`);
+    logJobExecution(jobName, `Environment loaded: Project=${envConfig.googleCloudProject}, Model=${envConfig.geminiModel}`);
     
-    log(`Running Simple Job: ${jobName} using templates: [${promptConfig.contextFiles.join(', ')}]`);
+    logJobExecution(jobName, `Running job using templates: [${promptConfig.contextFiles.join(', ')}]`);
     
     // Load template content from array of files
     const templateContent = SimpleTemplateManager.loadTemplateContent(promptConfig.contextFiles, configDir);
@@ -164,11 +164,12 @@ export async function runSimpleJob(jobConfig: SimpleJobConfig, configDir?: strin
     // Add memory context (always enabled)
     const memoryContent = await JobMemory.getMemoryContentForPrompt(jobName);
     prompt += `${memoryContent}\n\n`;
-    log(`Added memory context for job: ${jobName}`);
+    logJobExecution(jobName, 'Added memory context to prompt');
     
     // Append custom prompt if provided
     if (promptConfig.customPrompt) {
       prompt += `\n\n**IMPORTANT CUSTOM INSTRUCTIONS - PLEASE READ CAREFULLY:**\n${promptConfig.customPrompt}\n**END CUSTOM INSTRUCTIONS**`;
+      logJobExecution(jobName, 'Added custom prompt instructions');
     }
     
     if (!prompt.trim()) {
@@ -191,7 +192,7 @@ If no memory updates are needed, you can omit the jobMemory field or use an empt
 
 Return ONLY the JSON object, no additional text before or after.`;
     
-    log('Generated prompt for Gemini CLI');
+    logJobExecution(jobName, 'Generated prompt for Gemini CLI');
     
     // Execute Gemini CLI with options from config or environment
     const geminiCore = new GeminiCliCore();
@@ -199,11 +200,12 @@ Return ONLY the JSON object, no additional text before or after.`;
       ...globalGeminiOptions,
       ...jobConfig.geminiOptions
     };
+    logJobExecution(jobName, `Executing Gemini CLI with model: ${geminiOptions.model || 'default'}`);
     const result = await geminiCore.executeGemini(prompt, geminiOptions, googleCloudProject);
     
     // Check if execution was successful (no errors thrown)
     if (result.stdout) {
-      log(`Simple Job ${jobName} completed successfully`);
+      logJobExecution(jobName, `Gemini CLI execution completed successfully, output length: ${result.stdout.length} characters`);
       
       try {
         // Try to extract and parse JSON from the output
@@ -217,6 +219,8 @@ Return ONLY the JSON object, no additional text before or after.`;
           if (!geminiResponse.jobResult) {
             throw new Error('Invalid JSON response: missing jobResult field');
           }
+          
+          logJobExecution(jobName, `Successfully parsed JSON response, result length: ${geminiResponse.jobResult.length} characters`);
           
           // Display the main job result
           const preview = geminiResponse.jobResult.length > 2000 ? 
@@ -236,11 +240,11 @@ Return ONLY the JSON object, no additional text before or after.`;
           };
           
           await JobMemory.saveJobMemory(jobName, memoryUpdates);
-          log(`Updated memory for job: ${jobName} with ${Object.keys(memoryUpdates).length} keys`);
+          logJobExecution(jobName, `Updated memory with ${Object.keys(memoryUpdates).length} keys`);
           
         } else {
           // No valid JSON found, treat as plain text
-          log('No valid JSON response found, treating entire output as plain text result');
+          logJobExecution(jobName, 'No valid JSON response found, treating entire output as plain text result');
           
           const preview = result.stdout.length > 2000 ? 
             result.stdout.substring(0, 200) + '...' : 
@@ -255,12 +259,12 @@ Return ONLY the JSON object, no additional text before or after.`;
             lastResponseType: 'plain_text'
           };
           await JobMemory.saveJobMemory(jobName, memoryUpdates);
-          log(`Updated memory for job: ${jobName}`);
+          logJobExecution(jobName, 'Updated memory with execution metadata');
         }
         
       } catch (parseError: any) {
         // Fallback: treat as plain text if JSON parsing fails
-        error(`Error processing response: ${parseError.message}`);
+        logJobExecution(jobName, `Error processing response: ${parseError.message}`);
         
         const preview = result.stdout.length > 2000 ? 
           result.stdout.substring(0, 200) + '...' : 
@@ -276,7 +280,7 @@ Return ONLY the JSON object, no additional text before or after.`;
           lastParseError: parseError.message
         };
         await JobMemory.saveJobMemory(jobName, memoryUpdates);
-        log(`Updated memory for job: ${jobName}`);
+        logJobExecution(jobName, 'Updated memory with error details');
       }
       
     } else {
@@ -286,6 +290,8 @@ Return ONLY the JSON object, no additional text before or after.`;
 3. API permissions - ensure your account has Generative AI permissions
       
 Stderr: ${result.stderr}`;
+      
+      logJobExecution(jobName, `Gemini CLI execution failed: ${result.stderr || 'No output returned'}`);
       
       // Update memory with failure info (always enabled)
       const memoryUpdates = {
@@ -299,6 +305,7 @@ Stderr: ${result.stderr}`;
     }
     
   } catch (err: any) {
+    logJobExecution(jobName, `Job execution error: ${err.message}`);
     error(`Error running Simple Job ${jobName}:`, err);
     throw err;
   }

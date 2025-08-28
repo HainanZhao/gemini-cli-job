@@ -3,11 +3,23 @@ import * as path from 'path';
 import * as os from 'os';
 
 /**
- * Simple logging utility with CLI-friendly modes and file logging
+ * Comprehensive logging utility with CLI-friendly modes and complete output capture
  */
 
 // Global flag for CLI quiet mode
 let isCliMode = false;
+
+// Flag to track if console interception is enabled
+let consoleInterceptionEnabled = false;
+
+// Store original console methods
+const originalConsole = {
+  log: console.log,
+  error: console.error,
+  warn: console.warn,
+  debug: console.debug,
+  info: console.info
+};
 
 // Log directory setup
 const LOG_DIR = path.join(os.homedir(), '.gemini-cli-job', 'logs');
@@ -36,9 +48,31 @@ function writeToLogFile(level: string, message: string, ...args: any[]): void {
     
     const logFile = getTodayLogFile();
     fs.appendFileSync(logFile, logEntry, 'utf8');
+    
+    // Debug: Also write to a separate debug file to verify writes are happening
+    if (process.env.DEBUG_FILE_LOGGING === 'true') {
+      const debugFile = logFile.replace('.log', '-debug.log');
+      fs.appendFileSync(debugFile, `DEBUG: ${logEntry}`, 'utf8');
+    }
   } catch (err) {
     // Silently fail to avoid recursive logging issues
-    console.error(`Failed to write to log file: ${err}`);
+    originalConsole.error(`Failed to write to log file: ${err}`);
+  }
+}
+
+// Core logging function with consistent formatting
+function logWithLevel(level: string, consoleMethod: (...args: any[]) => void, message: string, ...args: any[]): void {
+  // Always write to file first
+  writeToLogFile(level, message, ...args);
+  
+  // Output to console based on mode
+  if (isCliMode) {
+    // Clean output for CLI commands
+    consoleMethod(message, ...args);
+  } else {
+    // Detailed logging for job execution
+    const timestamp = new Date().toISOString();
+    consoleMethod(`[${timestamp}] [${level}]`, message, ...args);
   }
 }
 
@@ -47,77 +81,57 @@ export function setCliMode(enabled: boolean): void {
 }
 
 export function log(message: string, ...args: any[]): void {
-  // Write to file first
-  writeToLogFile('LOG', message, ...args);
-  
-  if (isCliMode) {
-    // Clean output for CLI commands
-    console.log(message, ...args);
-  } else {
-    // Detailed logging for job execution
-    const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] [LOG]`, message, ...args);
-  }
+  logWithLevel('LOG', originalConsole.log, message, ...args);
 }
 
 export function error(message: string, ...args: any[]): void {
-  // Write to file first
-  writeToLogFile('ERROR', message, ...args);
-  
-  if (isCliMode) {
-    // Clean error output for CLI
-    console.error(`Error: ${message}`, ...args);
-  } else {
-    // Detailed logging for job execution
-    const timestamp = new Date().toISOString();
-    console.error(`[${timestamp}] [ERROR]`, message, ...args);
-  }
+  const prefix = isCliMode ? 'Error: ' : '';
+  logWithLevel('ERROR', originalConsole.error, `${prefix}${message}`, ...args);
 }
 
 export function warn(message: string, ...args: any[]): void {
-  // Write to file first
-  writeToLogFile('WARN', message, ...args);
-  
-  if (isCliMode) {
-    // Clean warning output for CLI
-    console.warn(`Warning: ${message}`, ...args);
-  } else {
-    // Detailed logging for job execution
-    const timestamp = new Date().toISOString();
-    console.warn(`[${timestamp}] [WARN]`, message, ...args);
-  }
+  const prefix = isCliMode ? 'Warning: ' : '';
+  logWithLevel('WARN', originalConsole.warn, `${prefix}${message}`, ...args);
 }
 
 export function debug(message: string, ...args: any[]): void {
   if (process.env.DEBUG === 'true') {
-    // Write to file first
-    writeToLogFile('DEBUG', message, ...args);
-    
-    const timestamp = new Date().toISOString();
-    console.debug(`[${timestamp}] [DEBUG]`, message, ...args);
+    logWithLevel('DEBUG', originalConsole.debug, message, ...args);
   }
 }
 
-// CLI-specific clean output functions
+// CLI-specific functions with emojis and formatting
 export function cliSuccess(message: string): void {
   writeToLogFile('CLI_SUCCESS', message);
-  console.log(`✅ ${message}`);
+  originalConsole.log(`✅ ${message}`);
 }
 
 export function cliInfo(message: string): void {
   writeToLogFile('CLI_INFO', message);
-  console.log(`ℹ️  ${message}`);
+  originalConsole.log(`ℹ️  ${message}`);
 }
 
 export function cliError(message: string): void {
   writeToLogFile('CLI_ERROR', message);
-  console.error(`❌ ${message}`);
+  originalConsole.error(`❌ ${message}`);
 }
 
 export function cliHeader(message: string): void {
   writeToLogFile('CLI_HEADER', message);
-  console.log(`\n🚀 ${message}`);
-  console.log('='.repeat(message.length + 3));
+  originalConsole.log(`\n🚀 ${message}`);
+  originalConsole.log('='.repeat(message.length + 3));
+}
+
+// Job-specific logging
+export function logJobExecution(jobName: string, message: string, ...args: any[]): void {
+  writeToLogFile('JOB_EXECUTION', `[${jobName}] ${message}`, ...args);
+  
+  if (isCliMode) {
+    originalConsole.log(`🔧 [${jobName}] ${message}`, ...args);
+  } else {
+    const timestamp = new Date().toISOString();
+    originalConsole.log(`[${timestamp}] [JOB] [${jobName}] ${message}`, ...args);
+  }
 }
 
 // Utility functions for log management
@@ -144,11 +158,65 @@ export function cleanupOldLogs(daysToKeep: number = 30): void {
         if (fileDate < cutoffDate) {
           const filePath = path.join(LOG_DIR, file);
           fs.unlinkSync(filePath);
-          console.log(`Cleaned up old log file: ${file}`);
+          originalConsole.log(`Cleaned up old log file: ${file}`);
         }
       }
     });
   } catch (err) {
-    console.error(`Failed to cleanup old logs: ${err}`);
+    originalConsole.error(`Failed to cleanup old logs: ${err}`);
   }
+}
+
+// Console capture system
+export function enableConsoleCapture(): void {
+  if (consoleInterceptionEnabled) {
+    return; // Already enabled
+  }
+  
+  consoleInterceptionEnabled = true;
+  
+  // Intercept all console methods
+  console.log = (...args: any[]) => {
+    writeToLogFile('CONSOLE_LOG', '', ...args);
+    originalConsole.log(...args);
+  };
+  
+  console.error = (...args: any[]) => {
+    writeToLogFile('CONSOLE_ERROR', '', ...args);
+    originalConsole.error(...args);
+  };
+  
+  console.warn = (...args: any[]) => {
+    writeToLogFile('CONSOLE_WARN', '', ...args);
+    originalConsole.warn(...args);
+  };
+  
+  console.debug = (...args: any[]) => {
+    writeToLogFile('CONSOLE_DEBUG', '', ...args);
+    originalConsole.debug(...args);
+  };
+  
+  console.info = (...args: any[]) => {
+    writeToLogFile('CONSOLE_INFO', '', ...args);
+    originalConsole.info(...args);
+  };
+}
+
+export function disableConsoleCapture(): void {
+  if (!consoleInterceptionEnabled) {
+    return; // Already disabled
+  }
+  
+  consoleInterceptionEnabled = false;
+  
+  // Restore original console methods
+  console.log = originalConsole.log;
+  console.error = originalConsole.error;
+  console.warn = originalConsole.warn;
+  console.debug = originalConsole.debug;
+  console.info = originalConsole.info;
+}
+
+export function isConsoleCaptureEnabled(): boolean {
+  return consoleInterceptionEnabled;
 }

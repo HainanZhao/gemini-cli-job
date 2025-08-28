@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## [1.1.3] - 2025-08-28
+
+### Changed
+
+- **Logger Code Cleanup** - Significantly refactored logging utility for better maintainability
+  - Consolidated duplicate code patterns into single `logWithLevel()` function
+  - Eliminated ~50% of redundant code across logging functions
+  - Improved consistency in error handling and console method usage
+  - Maintained all existing functionality while reducing complexity
+  - Better separation between CLI-friendly output and detailed job execution logging
+
+### Technical Improvements
+
+- **DRY Principle Applied** - Removed duplicate implementations across `log()`, `error()`, `warn()`, and `debug()` functions
+- **Consistent Error Handling** - Unified use of `originalConsole` methods to prevent recursive logging issues
+- **Cleaner Code Structure** - More maintainable codebase with single point of modification for core logging logic
+
 ## [1.1.2] - 2025-08-28
 
 ### Added
