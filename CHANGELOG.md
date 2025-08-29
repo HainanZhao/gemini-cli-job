@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## [1.1.4] - 2025-08-29
+
+### Added
+
+- **Environment Variable Config Support** - Added `GJOB_CONFIG_FILE` environment variable for easier configuration management
+  - Set custom config file path once via environment variable instead of using `--config` on every command
+  - Clear priority order: CLI `--config` option > `GJOB_CONFIG_FILE` env var > default `~/.gemini-cli-job/config.json`
+  - Helpful logging shows which config source is being used (CLI, environment, or default)
+  - Backwards compatible with existing usage patterns
+
+### Enhanced
+
+- **CLI User Experience** - No need to specify `--config` repeatedly when using custom config locations
+- **Configuration Flexibility** - Environment variable provides convenient fallback while CLI option maintains override capability
+- **Help Documentation** - Updated help text to show environment variable option: `env: GJOB_CONFIG_FILE`
+
 ## [1.1.3] - 2025-08-28
 
 ### Changed

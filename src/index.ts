@@ -20,7 +20,7 @@ interface Config {
   jobs: SimpleJobConfig[];
 }
 
-// Global config directory - can be overridden via CLI
+// Global config directory - can be overridden via CLI or environment variable
 let configDirectory = path.join(os.homedir(), '.gemini-cli-job');
 let configPath = path.join(configDirectory, 'config.json');
 
@@ -63,18 +63,26 @@ async function main() {
     .option('config', {
       alias: 'c',
       type: 'string',
-      description: 'Path to config.json file (default: ~/.gemini-cli-job/config.json)',
+      description: 'Path to config.json file (default: ~/.gemini-cli-job/config.json, env: GJOB_CONFIG_FILE)',
       global: true
     })
     .middleware((argv) => {
-      // Set config file path if provided
+      // Set config file path with proper precedence: CLI > Environment > Default
       if (argv['config']) {
+        // CLI option takes highest precedence
         const configFilePath = path.resolve(argv['config'] as string);
         configPath = configFilePath;
         configDirectory = path.dirname(configFilePath);
-        log(`Using custom config file: ${configPath}`);
+        log(`Using CLI config file: ${configPath}`);
+        log(`Config directory: ${configDirectory}`);
+      } else if (process.env.GJOB_CONFIG_FILE) {
+        // Environment variable as fallback
+        configPath = path.resolve(process.env.GJOB_CONFIG_FILE);
+        configDirectory = path.dirname(configPath);
+        log(`Using environment config file: ${configPath}`);
         log(`Config directory: ${configDirectory}`);
       }
+      // If neither CLI nor environment variable is set, use default (already set above)
     })
     .command('setup', 'Run the interactive setup wizard', () => {}, async () => {
       const { spawn } = await import('child_process');

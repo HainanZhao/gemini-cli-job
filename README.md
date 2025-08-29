@@ -216,6 +216,32 @@ Set these in your `.env` file:
 ```bash
 GOOGLE_CLOUD_PROJECT=your-gcp-project-id
 GEMINI_MODEL=gemini-1.5-flash
+
+# Optional: Set custom config file path
+GJOB_CONFIG_FILE=/path/to/your/config.json
+```
+
+#### Config File Priority
+
+The CLI uses the following priority order for configuration:
+
+1. **CLI Option**: `--config /path/to/config.json` (highest priority)
+2. **Environment Variable**: `GJOB_CONFIG_FILE=/path/to/config.json`
+3. **Default**: `~/.gemini-cli-job/config.json` (lowest priority)
+
+**Examples:**
+
+```bash
+# Set environment variable once
+export GJOB_CONFIG_FILE="/path/to/your/config.json"
+
+# Use commands without --config
+gjob list
+gjob start
+gjob run my-job
+
+# Override environment variable when needed
+gjob --config /other/config.json list
 ```
 
 ### Authentication Setup
