@@ -116,16 +116,6 @@ async function main() {
       });
       console.log();
     })
-    .command('templates', 'Show template directory info', () => {}, async () => {
-      const templatesDir = path.join(configDirectory, 'templates');
-      
-      console.log('\n📁 Template Directory Information');
-      console.log('='.repeat(35));
-      console.log(`📂 Templates location: ${templatesDir}`);
-      console.log(`📄 Config file: ${configPath}`);
-      console.log('\n💡 Usage: Configure contextFiles in your config.json to specify which templates to use');
-      console.log('Example: "contextFiles": ["templates/about.md", "templates/release-notes-rules.md"]\n');
-    })
     .command('run <jobName>', 'Run a specific job immediately', 
       (yargs) => {
         return yargs.positional('jobName', {
