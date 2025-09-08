@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- markdownlint-disable MD024 -->
 
+## [1.1.5] - 2025-09-08
+
+### Changed
+
+- **Gemini CLI YOLO Mode** - Enhanced Gemini CLI execution with improved prompt handling
+  - Updated Gemini CLI integration to use `--yolo` flag for streamlined interaction
+  - Improved prompt processing for more reliable AI responses
+  - Enhanced error handling and response parsing with yolo mode
+  - Better performance and reduced friction in AI interactions
+
+### Technical Improvements
+
+- **Command Execution** - Simplified Gemini CLI command structure with yolo mode
+- **Response Reliability** - More consistent AI response generation through improved prompt handling
+- **Performance Enhancement** - Reduced overhead in AI interactions with streamlined command execution
+
 ## [1.1.4] - 2025-08-29
 
 ### Added
