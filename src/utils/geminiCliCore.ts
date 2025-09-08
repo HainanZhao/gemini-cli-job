@@ -35,8 +35,7 @@ export class GeminiCliCore {
       debug('=== END PROMPT CONTENT ===');
       
       // Use -m for model selection
-      const args = ['-m', model];
-      debug(`Command: gemini ${args.join(' ')} (prompt via stdin)`);
+      debug(`Command: gemini model: ${model}`);
       
       // Add timeout to prevent hanging
       const timeout = setTimeout(() => {
@@ -45,13 +44,13 @@ export class GeminiCliCore {
         reject(new Error(`Gemini CLI execution timed out after ${timeoutMs}ms`));
       }, timeoutMs);
       
-      const geminiProcess = spawn('gemini', args, {
+      const geminiProcess = spawn('gemini', ['--yolo'], {
         stdio: 'pipe',
         shell: process.platform === 'win32',
         env: {
           ...process.env, // Inherit all environment variables
           GOOGLE_CLOUD_PROJECT: googleCloudProject || process.env.GOOGLE_CLOUD_PROJECT,
-          GEMINI_MODEL: options.model || process.env.GEMINI_MODEL,
+          GEMINI_MODEL: model,
         }
       });
       
@@ -106,8 +105,7 @@ Possible solutions:
 3. On Windows: ensure Node.js and npm are properly installed
 4. Restart terminal after installation to refresh PATH
 
-Platform: ${os.platform()}
-Command attempted: gemini ${args.join(' ')}`;
+Platform: ${os.platform()}`;
         }
         
         error(errorMessage);
