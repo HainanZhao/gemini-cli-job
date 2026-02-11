@@ -37,13 +37,6 @@ export class GeminiCliCore {
       // Use -m for model selection
       debug(`Command: gemini model: ${model}`);
       
-      // Add timeout to prevent hanging
-      const timeout = setTimeout(() => {
-        debug(`Gemini CLI timeout after ${timeoutMs}ms, killing process`);
-        geminiProcess.kill('SIGTERM');
-        reject(new Error(`Gemini CLI execution timed out after ${timeoutMs}ms`));
-      }, timeoutMs);
-      
       const geminiProcess = spawn('gemini', ['--yolo'], {
         stdio: 'pipe',
         shell: process.platform === 'win32',
@@ -51,8 +44,65 @@ export class GeminiCliCore {
           ...process.env, // Inherit all environment variables
           GOOGLE_CLOUD_PROJECT: googleCloudProject || process.env.GOOGLE_CLOUD_PROJECT,
           GEMINI_MODEL: model,
-        }
+        },
+        detached: process.platform !== 'win32'
       });
+
+      let settled = false;
+      let timeout: NodeJS.Timeout | undefined;
+      let forceKillTimeout: NodeJS.Timeout | undefined;
+
+      const clearTimers = () => {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = undefined;
+        }
+        if (forceKillTimeout) {
+          clearTimeout(forceKillTimeout);
+          forceKillTimeout = undefined;
+        }
+      };
+
+      const cleanup = () => {
+        clearTimers();
+        geminiProcess.stdout?.removeAllListeners();
+        geminiProcess.stderr?.removeAllListeners();
+        geminiProcess.removeAllListeners();
+        geminiProcess.stdin?.destroy();
+      };
+
+      const killProcessTree = (signal: NodeJS.Signals) => {
+        if (!geminiProcess.pid) {
+          return;
+        }
+
+        try {
+          if (process.platform !== 'win32') {
+            process.kill(-geminiProcess.pid, signal);
+          } else {
+            geminiProcess.kill(signal);
+          }
+        } catch (killError) {
+          debug(`Failed to send ${signal} to Gemini CLI process: ${String(killError)}`);
+        }
+      };
+
+      // Add timeout to prevent hanging
+      timeout = setTimeout(() => {
+        debug(`Gemini CLI timeout after ${timeoutMs}ms, killing process`);
+        killProcessTree('SIGTERM');
+
+        forceKillTimeout = setTimeout(() => {
+          debug('Gemini CLI still running after SIGTERM, sending SIGKILL');
+          killProcessTree('SIGKILL');
+        }, 5_000);
+
+        if (!settled) {
+          settled = true;
+          cleanup();
+          reject(new Error(`Gemini CLI execution timed out after ${timeoutMs}ms`));
+        }
+      }, timeoutMs);
       
       let stdout = '';
       let stderr = '';
@@ -70,7 +120,9 @@ export class GeminiCliCore {
       });
       
       geminiProcess.on('close', (code: number | null) => {
-        clearTimeout(timeout);
+        // Best-effort cleanup of any lingering child processes.
+        killProcessTree('SIGTERM');
+        cleanup();
         debug(`Gemini CLI process closed with code: ${code}`);
         
         // Debug: Log the raw response
@@ -81,6 +133,12 @@ export class GeminiCliCore {
         debug(stderr);
         debug('=== END RAW RESPONSE ===');
         
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+
         if (code === 0) {
           log('✅ Gemini CLI execution completed successfully');
           resolve({ stdout: stdout.trim(), stderr: stderr.trim() });
@@ -92,7 +150,7 @@ export class GeminiCliCore {
       });
       
       geminiProcess.on('error', (err: Error) => {
-        clearTimeout(timeout);
+        cleanup();
         let errorMessage = `Failed to execute Gemini CLI: ${err.message}`;
         
         // Provide helpful error messages for common issues
@@ -109,7 +167,10 @@ Platform: ${os.platform()}`;
         }
         
         error(errorMessage);
-        reject(new Error(errorMessage));
+        if (!settled) {
+          settled = true;
+          reject(new Error(errorMessage));
+        }
       });
       
       debug('Gemini CLI process started, waiting for response...');
